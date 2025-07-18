@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Погода</string>
+    <string name="an_error_occurred">Произошла ошибка.</string>
+    <string name="something_went_wrong">Что-то пошло не так</string>
+    <string name="retry">Повторить попытку</string>
+    <string name="wind">Ветер</string>
+    <string name="pressure">Давление</string>
+    <string name="humidity">Влажность</string>
+    <string name="daily_forecast">Ежедневный прогноз</string>
+    <string name="search">Поиск</string>
+    <string name="no_results">Нет результатов для %1$s</string>
+    <string name="search_summary">Поиск по названию города или району, например: Париж, Нью-Йорк или Лондон</string>
+    <string name="set_location">Установить местоположение</string>
+    <string name="settings">Настройки</string>
+    <string name="temperature_unit">Единица измерения температуры</string>
+    <string name="celsius">Цельсий (метрический)</string>
+    <string name="fahrenheit">Фаренгейт (имперский)</string>
+    <string name="temperature">%1$s°%2$s</string>
+    <string name="feels_like">%1$s,\nощущается как %2$s°%3$s</string>
+    <string name="results_found">Результатов найдено: %1$s</string>
+    <string name="popular_locations">Популярные местоположения</string>
+    <string name="ms">%1$s м/с</string>
+    <string name="mh">%1$s м/ч</string>
+    <string name="mb">%1$s МБ</string>
+    <string name="new_york">Нью-Йорк,\nСША</string>
+    <string name="london">Лондон,\nБритания</string>
+    <string name="paris">Париж,\nФранция</string>
+    <string name="warsaw">Варшава,\nПольша</string>
+    <string name="rome">Рим,\nИталия</string>
+    <string name="server_timeout">Время ожидания сервера истекло. Пожалуйста попробуйте позже.</string>
+    <string name="no_internet_connection">Нет подключения к интернету. Пожалуйста попробуйте позже.</string>
+    <string name="cannot_connect_to_server">Невозможно подключиться к серверу. Пожалуйста попробуйте позже.</string>
+</resources>
