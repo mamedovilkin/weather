@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -27,10 +28,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -45,10 +48,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mamedovilkin.weather.R
-import io.github.mamedovilkin.weather.network.model.CurrentWeather
 import io.github.mamedovilkin.weather.ui.theme.background
 import io.github.mamedovilkin.weather.ui.theme.cardBackgroundGradientEnd
 import io.github.mamedovilkin.weather.ui.theme.cardBackgroundGradientStart
@@ -56,26 +57,27 @@ import io.github.mamedovilkin.weather.ui.theme.primary
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import io.github.mamedovilkin.weather.network.model.Weather
 import io.github.mamedovilkin.weather.ui.screen.state.ErrorScreen
 import io.github.mamedovilkin.weather.ui.screen.state.LoadingScreen
 import io.github.mamedovilkin.weather.ui.theme.onPrimary
 import io.github.mamedovilkin.weather.ui.theme.surface
 import kotlin.math.ceil
-import io.github.mamedovilkin.weather.network.model.TemperatureUnit
-import io.github.mamedovilkin.weather.network.model.convertToSymbol
+import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
+import io.github.mamedovilkin.weather.domain.model.Weather
+import io.github.mamedovilkin.weather.domain.model.convertToSymbol
+import io.github.mamedovilkin.weather.ui.components.AdBanner
 import io.github.mamedovilkin.weather.util.WeatherStat
+import io.github.mamedovilkin.weather.util.getDate
 import io.github.mamedovilkin.weather.util.getSeasonImageOfYear
 import io.github.mamedovilkin.weather.util.getWeatherIcon
 import kotlinx.serialization.InternalSerializationApi
-import java.util.Locale
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeScreen(
-    homeViewModel: HomeViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = koinViewModel(),
     onNavigateToSearch: (String) -> Unit
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
@@ -98,24 +100,45 @@ fun HomeScreen(
             )
         }
         is HomeScreenState.Success -> {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-                    .verticalScroll(rememberScrollState())
-                    .animateContentSize(),
-            ) {
-                CurrentWeather(
-                    seasonImage = getSeasonImageOfYear(),
-                    weather = screenState.currentWeather,
-                    temperatureUnit = uiState.temperatureUnit,
-                    onNavigateToSearch = onNavigateToSearch
-                )
-                WeatherStats(screenState.weatherStats)
-                HourlyForecast(screenState.hourlyForecast)
-                DailyForecast(screenState.dailyForecast)
-                Spacer(modifier = Modifier.height(72.dp))
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .verticalScroll(rememberScrollState())
+                        .animateContentSize(),
+                ) {
+                    CurrentWeather(
+                        seasonImage = getSeasonImageOfYear(),
+                        weather = screenState.currentWeather,
+                        temperatureUnit = uiState.temperatureUnit,
+                        onNavigateToSearch = onNavigateToSearch
+                    )
+                    WeatherStats(screenState.weatherStats)
+                    AdBanner(1917863)
+                    HourlyForecast(screenState.hourlyForecast)
+                    DailyForecast(screenState.dailyForecast)
+                    Spacer(modifier = Modifier.height(72.dp))
+                }
+                FloatingActionButton(
+                    onClick = {
+                        launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        homeViewModel.fetchCurrentLocation()
+                    },
+                    shape = CircleShape,
+                    containerColor = cardBackgroundGradientEnd,
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .padding(bottom = 80.dp, end = 8.dp)
+                        .align(Alignment.BottomEnd)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location),
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
             }
         }
     }
@@ -124,7 +147,7 @@ fun HomeScreen(
 @Composable
 fun CurrentWeather(
     @DrawableRes seasonImage: Int,
-    weather: CurrentWeather,
+    weather: Weather,
     temperatureUnit: TemperatureUnit,
     onNavigateToSearch: (String) -> Unit,
 ) {
@@ -159,15 +182,8 @@ fun CurrentWeather(
         ) {
             Row {
                 Text(
-                    text = weather.date,
+                    text = getDate(),
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = primary
-                )
-                Text(
-                    text = weather.weekDay.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Normal,
                     color = primary
                 )
             }
@@ -176,22 +192,22 @@ fun CurrentWeather(
                 modifier = Modifier
                     .background(
                         color = Color.White.copy(alpha = 0.1F),
-                        shape = RoundedCornerShape(18.dp)
+                        shape = RoundedCornerShape(20.dp)
                     )
                     .padding(vertical = 2.dp)
                     .padding(horizontal = 8.dp)
-                    .clickable { onNavigateToSearch(weather.city) }
-                    .testTag("navigate_to_search")
+                    .clickable { onNavigateToSearch(weather.name) }
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_location),
                     contentDescription = null,
-                    tint = primary
+                    tint = primary,
+                    modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = weather.city,
-                    fontSize = 24.sp,
+                    text = weather.name,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Normal,
                     color = primary
                 )
@@ -200,7 +216,7 @@ fun CurrentWeather(
                     contentDescription = null,
                     tint = primary,
                     modifier = Modifier
-                        .size(18.dp)
+                        .size(20.dp)
                         .padding(start = 4.dp)
                 )
             }
@@ -218,7 +234,7 @@ fun CurrentWeather(
                 Text(
                     text = stringResource(
                         R.string.temperature,
-                        weather.temp,
+                        ceil(weather.temperature).toInt(),
                         temperatureUnit.convertToSymbol()
                     ),
                     fontSize = 88.sp,
@@ -226,7 +242,7 @@ fun CurrentWeather(
                     color = primary,
                 )
                 Text(
-                    text = stringResource(R.string.feels_like, weather.description, weather.feelsLikeTemp, temperatureUnit.convertToSymbol()),
+                    text = stringResource(R.string.feels_like, weather.description, ceil(weather.feelsLike).toInt(), temperatureUnit.convertToSymbol()),
                     textAlign = TextAlign.Center,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Normal,
@@ -242,8 +258,7 @@ fun WeatherStats(
     stats: List<WeatherStat>
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         stats.forEach { stat ->
@@ -261,20 +276,24 @@ fun WeatherStats(
                         )
                     )
                     .padding(8.dp),
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 Icon(
                     painter = painterResource(stat.icon),
                     contentDescription = null,
-                    tint = primary
+                    tint = primary,
+                    modifier = Modifier.size(24.dp)
                 )
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(stat.title),
                     color = primary,
+                    fontSize = 18.sp,
                 )
                 Text(
                     text = stat.stat,
                     color = primary,
+                    fontSize = 18.sp,
                 )
             }
         }
@@ -305,20 +324,20 @@ fun HourlyForecast(
                     modifier = Modifier.padding(8.dp)
                 ) {
                     Text(
-                        text = weather.dt_txt.toString(),
+                        text = weather.datetime,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Normal,
                         fontSize = 18.sp,
                         color = primary
                     )
                     Image(
-                        painter = painterResource(getWeatherIcon(weather.weather.first().icon)),
+                        painter = painterResource(getWeatherIcon(weather.icon)),
                         contentScale = ContentScale.Crop,
                         contentDescription = null,
                         modifier = Modifier.size(48.dp)
                     )
                     Text(
-                        text = "${ceil(weather.main.temp).toInt()}°",
+                        text = "${ceil(weather.temperature).toInt()}°",
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 24.sp,
@@ -364,7 +383,7 @@ fun DailyForecast(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = weather.dt_txt.toString(),
+                        text = weather.datetime,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
@@ -372,13 +391,13 @@ fun DailyForecast(
                         modifier = Modifier.weight(1F)
                     )
                     Image(
-                        painter = painterResource(getWeatherIcon(weather.weather.first().icon)),
+                        painter = painterResource(getWeatherIcon(weather.icon)),
                         contentScale = ContentScale.Crop,
                         contentDescription = null,
                         modifier = Modifier.size(48.dp)
                     )
                     Text(
-                        text = "${ceil(weather.main.temp_max).toInt()}°",
+                        text = "${ceil(weather.maxTemperature).toInt()}°",
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 24.sp,
@@ -393,7 +412,7 @@ fun DailyForecast(
                         color = onPrimary
                     )
                     Text(
-                        text = "${ceil(weather.main.temp_min).toInt()}°",
+                        text = "${ceil(weather.minTemperature).toInt()}°",
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Normal,
                         fontSize = 18.sp,
@@ -401,7 +420,7 @@ fun DailyForecast(
                         modifier = Modifier.weight(1F)
                     )
                     Text(
-                        text = weather.weather.first().description,
+                        text = weather.description,
                         textAlign = TextAlign.Center,
                         maxLines = 2,
                         fontWeight = FontWeight.Normal,

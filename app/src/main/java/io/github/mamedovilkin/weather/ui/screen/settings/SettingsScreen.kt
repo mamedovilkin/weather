@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -23,20 +21,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mamedovilkin.weather.R
 import io.github.mamedovilkin.weather.ui.theme.primary
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.platform.testTag
-import io.github.mamedovilkin.weather.network.model.TemperatureUnit
+import androidx.compose.ui.res.painterResource
+import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
 import io.github.mamedovilkin.weather.ui.theme.onPrimary
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SettingsScreen(
-    settingsViewModel: SettingsViewModel = hiltViewModel()
+    settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -48,8 +46,7 @@ fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(8.dp)
     ) {
         Text(
             text = stringResource(R.string.settings),
@@ -76,7 +73,6 @@ fun SettingsScreen(
             Row(
                 modifier = Modifier
                     .clickable { settingsViewModel.setExpanded(true) }
-                    .testTag("temperature_unit")
             ) {
                 Text(
                     text = if (uiState.temperatureUnit == TemperatureUnit.IMPERIAL) {
@@ -89,7 +85,7 @@ fun SettingsScreen(
                     color = primary
                 )
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
+                    painter = painterResource(R.drawable.ic_arrow_down),
                     contentDescription = null,
                     tint = primary
                 )
@@ -102,16 +98,14 @@ fun SettingsScreen(
                         onClick = {
                             settingsViewModel.setExpanded(false)
                             settingsViewModel.setUnit(TemperatureUnit.METRIC)
-                        },
-                        modifier = Modifier.testTag("celsius")
+                        }
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.fahrenheit)) },
                         onClick = {
                             settingsViewModel.setExpanded(false)
                             settingsViewModel.setUnit(TemperatureUnit.IMPERIAL)
-                        },
-                        modifier = Modifier.testTag("fahrenheit")
+                        }
                     )
                 }
             }

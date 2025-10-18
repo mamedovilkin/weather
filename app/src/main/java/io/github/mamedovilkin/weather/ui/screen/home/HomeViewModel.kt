@@ -5,21 +5,15 @@ package io.github.mamedovilkin.weather.ui.screen.home
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.mamedovilkin.weather.R
-import io.github.mamedovilkin.weather.datastore.repository.DataStoreRepository
-import io.github.mamedovilkin.weather.network.model.CurrentWeather
-import io.github.mamedovilkin.weather.network.model.TemperatureUnit
-import io.github.mamedovilkin.weather.network.model.Weather
-import io.github.mamedovilkin.weather.network.model.convertToUnit
-import io.github.mamedovilkin.weather.network.model.toCurrentWeather
-import io.github.mamedovilkin.weather.network.repository.NetworkRepository
-import io.github.mamedovilkin.weather.service.LocationService
+import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
+import io.github.mamedovilkin.weather.domain.model.Weather
+import io.github.mamedovilkin.weather.domain.model.convertToUnit
+import io.github.mamedovilkin.weather.domain.usecase.HomeUseCase
 import io.github.mamedovilkin.weather.util.WeatherStat
 import io.github.mamedovilkin.weather.util.getDate
 import io.github.mamedovilkin.weather.util.getTime
 import io.github.mamedovilkin.weather.util.isTodayForecast
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,12 +21,11 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.InternalSerializationApi
-import javax.inject.Inject
 
 sealed interface HomeScreenState {
     data class Failure(val e: Exception): HomeScreenState
     data class Success(
-        val currentWeather: CurrentWeather,
+        val currentWeather: Weather,
         val weatherStats: List<WeatherStat>,
         val hourlyForecast: List<Weather>,
         val dailyForecast: List<Weather>,
@@ -47,20 +40,16 @@ data class HomeUiState(
     val lon: Double = 0.0,
 )
 
-@HiltViewModel
-class HomeViewModel @Inject constructor(
+class HomeViewModel(
     private val application: Application,
-    private val dataStoreRepository: DataStoreRepository,
-    private val networkRepository: NetworkRepository,
-    private val locationService: LocationService,
-    private val dispatcher: CoroutineDispatcher
+    private val homeUseCase: HomeUseCase
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    fun fetchUnit() = viewModelScope.launch(dispatcher) {
-        dataStoreRepository.temperatureUnit
+    fun fetchUnit() = viewModelScope.launch {
+        homeUseCase.temperatureUnit
             .catch {
                 setTemperatureUnit(TemperatureUnit.METRIC)
             }
@@ -70,8 +59,8 @@ class HomeViewModel @Inject constructor(
             }
     }
 
-    fun fetchLocation() = viewModelScope.launch(dispatcher) {
-        dataStoreRepository.location
+    fun fetchLocation() = viewModelScope.launch {
+        homeUseCase.location
             .catch { e ->
                 setFailureHomeScreenState(Exception(e))
             }
@@ -80,14 +69,7 @@ class HomeViewModel @Inject constructor(
                 val lon = it.last()
 
                 if (lat == 0.0 && lon == 0.0) {
-                    locationService.getCurrentLocation { location ->
-                        viewModelScope.launch(dispatcher) {
-                            dataStoreRepository.setLocation(
-                                lat = location?.latitude ?: 0.0,
-                                lon = location?.longitude ?: 0.0
-                            )
-                        }
-                    }
+                    fetchCurrentLocation()
                 } else {
                     _uiState.update { currentState ->
                         currentState.copy(lat = lat, lon = lon)
@@ -98,8 +80,19 @@ class HomeViewModel @Inject constructor(
             }
     }
 
-    private fun fetchWeather() = viewModelScope.launch(dispatcher) {
-        networkRepository
+    fun fetchCurrentLocation() {
+        homeUseCase.getCurrentLocation { location ->
+            viewModelScope.launch {
+                homeUseCase.setLocation(
+                    lat = location?.latitude ?: 0.0,
+                    lon = location?.longitude ?: 0.0
+                )
+            }
+        }
+    }
+
+    private fun fetchWeather() = viewModelScope.launch {
+        homeUseCase
             .getCurrentWeather(
                 _uiState.value.lat,
                 _uiState.value.lon,
@@ -115,9 +108,8 @@ class HomeViewModel @Inject constructor(
 
     private fun fetchForecast(
         weather: Weather
-    ) = viewModelScope.launch(dispatcher) {
-
-        networkRepository
+    ) = viewModelScope.launch {
+        homeUseCase
             .getForecast(
                 _uiState.value.lat,
                 _uiState.value.lon,
@@ -127,15 +119,15 @@ class HomeViewModel @Inject constructor(
                 _uiState.update { currentState ->
                     currentState.copy(
                         homeScreenState = HomeScreenState.Success(
-                            currentWeather = weather.toCurrentWeather(),
+                            currentWeather = weather,
                             weatherStats = makeWeatherStats(weather),
-                            hourlyForecast = data.list
-                                .filter { isTodayForecast(it.dt_txt.toString()) }
-                                .map { it.copy(dt_txt = getTime(application, it.dt_txt.toString())) },
-                            dailyForecast = data.list
-                                .filter { !isTodayForecast(it.dt_txt.toString()) }
-                                .map { it.copy(dt_txt = getDate(it.dt_txt.toString())) }
-                                .distinctBy { it.dt_txt },
+                            hourlyForecast = data.forecast
+                                .filter { isTodayForecast(it.datetime) }
+                                .map { it.copy(datetime = getTime(application, it.datetime)) },
+                            dailyForecast = data.forecast
+                                .filter { !isTodayForecast(it.datetime) }
+                                .map { it.copy(datetime = getDate(it.datetime)) }
+                                .distinctBy { it.datetime },
                         )
                     )
                 }
@@ -167,20 +159,20 @@ class HomeViewModel @Inject constructor(
                 icon = R.drawable.ic_wind,
                 title = R.string.wind,
                 stat = if (_uiState.value.temperatureUnit == TemperatureUnit.METRIC) {
-                    application.getString(R.string.ms, weather.wind.speed.toString())
+                    application.getString(R.string.ms, weather.windSpeed.toString())
                 } else {
-                    application.getString(R.string.mh, weather.wind.speed.toString())
+                    application.getString(R.string.mh, weather.windSpeed.toString())
                 },
             ),
             WeatherStat(
                 icon = R.drawable.ic_pressure,
                 title = R.string.pressure,
-                stat = application.getString(R.string.mb, weather.main.pressure.toString()),
+                stat = application.getString(R.string.mb, weather.pressure.toString()),
             ),
             WeatherStat(
                 icon = R.drawable.ic_humidity,
                 title = R.string.humidity,
-                stat = "${weather.main.humidity}%",
+                stat = "${weather.humidity}%",
             )
         )
     }

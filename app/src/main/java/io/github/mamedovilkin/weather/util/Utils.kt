@@ -14,13 +14,6 @@ data class WeatherStat(
     val stat: String
 )
 
-data class PopularLocation(
-    val image: Int,
-    val name: String,
-    val lat: Double,
-    val lon: Double,
-)
-
 fun getSeasonImageOfYear(): Int {
     val month = Calendar.getInstance().get(Calendar.MONTH)
 
@@ -66,6 +59,11 @@ fun getTime(context: Context, datetime: String): String {
 fun getDate(datetime: String): String {
     val date = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(datetime)
     return SimpleDateFormat("d MMM", Locale.getDefault()).format(date ?: Date())
+}
+
+fun getDate(): String {
+    val formatter = SimpleDateFormat("EEEE, d MMMM", Locale.getDefault())
+    return formatter.format(Date()).replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 }
 
 fun String.textWithEllipsis(): String {

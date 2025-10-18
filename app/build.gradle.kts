@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
 }
 
 android {
@@ -14,19 +13,13 @@ android {
         applicationId = "io.github.mamedovilkin.weather"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
         }
     }
 
@@ -47,8 +40,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":datastore"))
-    implementation(project(":network"))
+    implementation(project(":domain"))
+    implementation(project(":data"))
     implementation(libs.coil.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -60,19 +53,10 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.core.android)
-    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.play.services.location)
-    implementation(libs.hilt.android)
     implementation(libs.bundles.ktor)
-    ksp(libs.hilt.android.compiler)
-
-    testImplementation(libs.junit)
-
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.bundles.koin)
+    implementation(libs.bundles.room)
+    implementation(libs.mytarget)
+    ksp(libs.room.compiler)
 }

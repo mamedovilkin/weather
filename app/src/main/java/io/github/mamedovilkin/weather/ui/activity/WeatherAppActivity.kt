@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,18 +19,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.createGraph
 import androidx.navigation.navArgument
-import dagger.hilt.android.AndroidEntryPoint
-import io.github.mamedovilkin.weather.ui.common.Screen
-import io.github.mamedovilkin.weather.ui.common.WeatherBottomBar
+import io.github.mamedovilkin.weather.ui.components.Screen
+import io.github.mamedovilkin.weather.ui.components.WeatherBottomBar
 import io.github.mamedovilkin.weather.ui.screen.home.HomeScreen
 import io.github.mamedovilkin.weather.ui.screen.search.SearchScreen
 import io.github.mamedovilkin.weather.ui.screen.settings.SettingsScreen
 import io.github.mamedovilkin.weather.ui.theme.WeatherTheme
 import io.github.mamedovilkin.weather.ui.theme.background
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import kotlinx.serialization.InternalSerializationApi
 
-@AndroidEntryPoint
 class WeatherAppActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,10 +69,7 @@ fun WeatherApp() {
                             })
                         ) { backStackEntry ->
                             val city = backStackEntry.arguments?.getString("city")
-                            SearchScreen(
-                                city = city,
-                                onNavigateToHome = { navController.navigate(Screen.Home.route) }
-                            )
+                            SearchScreen(city = city)
                         }
                         composable(route = Screen.Settings.route) {
                             SettingsScreen()
