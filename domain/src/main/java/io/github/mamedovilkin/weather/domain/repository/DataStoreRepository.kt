@@ -7,4 +7,6 @@ interface DataStoreRepository {
     val location: Flow<List<Double>>
     suspend fun setTemperatureUnit(temperatureUnit: String)
     val temperatureUnit: Flow<String>
+    suspend fun setPressureUnit(pressureUnit: String)
+    val pressureUnit: Flow<String>
 }

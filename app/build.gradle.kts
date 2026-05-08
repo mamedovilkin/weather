@@ -1,3 +1,7 @@
+import java.io.FileInputStream
+import java.util.Properties
+import kotlin.toString
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -13,8 +17,15 @@ android {
         applicationId = "io.github.mamedovilkin.weather"
         minSdk = 24
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
+
+
+        val localPropertiesFile = rootProject.file("local.properties")
+        val localProperties = Properties()
+        localProperties.load(FileInputStream(localPropertiesFile))
+
+        buildConfigField("String", "FEEDBACK_EMAIL", localProperties["FEEDBACK_EMAIL"].toString())
     }
 
     buildTypes {
@@ -36,6 +47,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -58,5 +70,6 @@ dependencies {
     implementation(libs.bundles.koin)
     implementation(libs.bundles.room)
     implementation(libs.mytarget)
+    implementation(libs.androidx.glance.appwidget)
     ksp(libs.room.compiler)
 }

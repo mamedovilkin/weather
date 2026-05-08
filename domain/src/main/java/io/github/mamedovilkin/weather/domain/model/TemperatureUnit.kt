@@ -4,7 +4,7 @@ enum class TemperatureUnit {
     METRIC, IMPERIAL
 }
 
-fun String.convertToUnit(): TemperatureUnit {
+fun String.convertToTemperatureUnit(): TemperatureUnit {
     return if (this.equals(TemperatureUnit.IMPERIAL.name, ignoreCase = true)) {
         TemperatureUnit.IMPERIAL
     } else {

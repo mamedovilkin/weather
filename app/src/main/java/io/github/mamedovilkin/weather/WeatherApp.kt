@@ -18,6 +18,7 @@ import io.github.mamedovilkin.weather.domain.usecase.SettingsUseCase
 import io.github.mamedovilkin.weather.domain.service.LocationService
 import io.github.mamedovilkin.weather.data.service.LocationServiceImpl
 import io.github.mamedovilkin.weather.domain.usecase.HomeUseCase
+import io.github.mamedovilkin.weather.domain.usecase.WidgetUseCase
 import io.github.mamedovilkin.weather.ui.screen.home.HomeViewModel
 import io.github.mamedovilkin.weather.ui.screen.search.SearchViewModel
 import io.github.mamedovilkin.weather.ui.screen.settings.SettingsViewModel
@@ -52,6 +53,8 @@ class WeatherApp : Application() {
                     single<SearchUseCase> { SearchUseCase(get(), get()) }
 
                     single<HomeUseCase> { HomeUseCase(get(), get(), get()) }
+
+                    single<WidgetUseCase> { WidgetUseCase(get(), get()) }
 
                     single<HomeViewModel> { HomeViewModel(this@WeatherApp, get()) }
 

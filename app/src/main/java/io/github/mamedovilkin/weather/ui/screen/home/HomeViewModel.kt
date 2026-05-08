@@ -6,9 +6,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.mamedovilkin.weather.R
+import io.github.mamedovilkin.weather.domain.model.PressureUnit
 import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
 import io.github.mamedovilkin.weather.domain.model.Weather
-import io.github.mamedovilkin.weather.domain.model.convertToUnit
+import io.github.mamedovilkin.weather.domain.model.convertToPressureUnit
+import io.github.mamedovilkin.weather.domain.model.convertToTemperatureUnit
 import io.github.mamedovilkin.weather.domain.usecase.HomeUseCase
 import io.github.mamedovilkin.weather.util.WeatherStat
 import io.github.mamedovilkin.weather.util.getDate
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.InternalSerializationApi
@@ -36,6 +39,7 @@ sealed interface HomeScreenState {
 data class HomeUiState(
     val homeScreenState: HomeScreenState = HomeScreenState.Loading,
     val temperatureUnit: TemperatureUnit = TemperatureUnit.METRIC,
+    val pressureUnit: PressureUnit = PressureUnit.MMHG,
     val lat: Double = 0.0,
     val lon: Double = 0.0,
 )
@@ -48,15 +52,17 @@ class HomeViewModel(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    fun fetchUnit() = viewModelScope.launch {
-        homeUseCase.temperatureUnit
-            .catch {
-                setTemperatureUnit(TemperatureUnit.METRIC)
-            }
-            .collect {
-                setTemperatureUnit(it.convertToUnit())
-                fetchLocation()
-            }
+    fun fetchUnits() = viewModelScope.launch {
+        combine(homeUseCase.temperatureUnit, homeUseCase.pressureUnit) { (temperatureUnit, pressureUnit) ->
+            temperatureUnit to pressureUnit
+        }.catch {
+            setTemperatureUnit(TemperatureUnit.METRIC)
+            setPressureUnit(PressureUnit.MMHG)
+        }.collect {
+            setTemperatureUnit(it.first.convertToTemperatureUnit())
+            setPressureUnit(it.second.convertToPressureUnit())
+            fetchLocation()
+        }
     }
 
     fun fetchLocation() = viewModelScope.launch {
@@ -145,6 +151,14 @@ class HomeViewModel(
         }
     }
 
+    private fun setPressureUnit(pressureUnit: PressureUnit) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                pressureUnit = pressureUnit
+            )
+        }
+    }
+
     private fun setFailureHomeScreenState(e: Exception) {
         _uiState.update { currentState ->
             currentState.copy(
@@ -167,7 +181,11 @@ class HomeViewModel(
             WeatherStat(
                 icon = R.drawable.ic_pressure,
                 title = R.string.pressure,
-                stat = application.getString(R.string.mb, weather.pressure.toString()),
+                stat = if (_uiState.value.pressureUnit == PressureUnit.MB) {
+                    application.getString(R.string.mb, weather.pressure.toString())
+                } else {
+                    application.getString(R.string.mmhg, weather.mmHG.toString())
+                },
             ),
             WeatherStat(
                 icon = R.drawable.ic_humidity,

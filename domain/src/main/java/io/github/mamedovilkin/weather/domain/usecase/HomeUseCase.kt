@@ -13,6 +13,7 @@ class HomeUseCase(
 ) {
 
     val temperatureUnit = dataStoreRepository.temperatureUnit
+    val pressureUnit = dataStoreRepository.pressureUnit
     val location = dataStoreRepository.location
 
     fun getCurrentLocation(callback: (Location?) -> Unit) = locationService.getCurrentLocation(callback)

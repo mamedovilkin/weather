@@ -2,19 +2,25 @@ package io.github.mamedovilkin.weather.ui.screen.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.mamedovilkin.weather.domain.model.PressureUnit
 import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
-import io.github.mamedovilkin.weather.domain.model.convertToUnit
+import io.github.mamedovilkin.weather.domain.model.convertToPressureUnit
+import io.github.mamedovilkin.weather.domain.model.convertToTemperatureUnit
 import io.github.mamedovilkin.weather.domain.usecase.SettingsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class SettingsUiState(
-    val expanded: Boolean = false,
-    val temperatureUnit: TemperatureUnit = TemperatureUnit.METRIC
+    val expandedTemperatureUnit: Boolean = false,
+    val temperatureUnit: TemperatureUnit = TemperatureUnit.METRIC,
+    val expandedPressureUnit: Boolean = false,
+    val pressureUnit: PressureUnit = PressureUnit.MMHG,
+    val showMassage: Boolean = false,
 )
 
 class SettingsViewModel(
@@ -24,9 +30,15 @@ class SettingsViewModel(
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    fun setExpanded(expanded: Boolean) {
+    fun setExpandedTemperatureUnit(expandedTemperatureUnit: Boolean) {
         _uiState.update { currentState ->
-            currentState.copy(expanded = expanded)
+            currentState.copy(expandedTemperatureUnit = expandedTemperatureUnit)
+        }
+    }
+
+    fun setExpandedPressureUnit(expandedPressureUnit: Boolean) {
+        _uiState.update { currentState ->
+            currentState.copy(expandedPressureUnit = expandedPressureUnit)
         }
     }
 
@@ -34,19 +46,42 @@ class SettingsViewModel(
         settingsUseCase.setTemperatureUnit(temperatureUnit)
     }
 
-    fun fetchUnit() = viewModelScope.launch {
-        settingsUseCase.temperatureUnit
+    fun setUnit(pressureUnit: PressureUnit) = viewModelScope.launch {
+        settingsUseCase.setPressureUnit(pressureUnit)
+    }
+
+    fun fetchUnits() = viewModelScope.launch {
+        combine(
+            settingsUseCase.temperatureUnit,
+            settingsUseCase.pressureUnit
+        ) { temp, pressure ->
+            temp to pressure
+        }
             .catch {
                 setTemperatureUnit(TemperatureUnit.METRIC)
+                setPressureUnit(PressureUnit.MMHG)
             }
-            .collect {
-                setTemperatureUnit(it.convertToUnit())
+            .collect { (temp, pressure) ->
+                setTemperatureUnit(temp.convertToTemperatureUnit())
+                setPressureUnit(pressure.convertToPressureUnit())
             }
     }
 
     private fun setTemperatureUnit(temperatureUnit: TemperatureUnit) {
         _uiState.update { currentState ->
             currentState.copy(temperatureUnit = temperatureUnit)
+        }
+    }
+
+    private fun setPressureUnit(pressureUnit: PressureUnit) {
+        _uiState.update { currentState ->
+            currentState.copy(pressureUnit = pressureUnit)
+        }
+    }
+
+    fun setShowMassage(showMassage: Boolean) {
+        _uiState.update { currentState ->
+            currentState.copy(showMassage = showMassage)
         }
     }
 }

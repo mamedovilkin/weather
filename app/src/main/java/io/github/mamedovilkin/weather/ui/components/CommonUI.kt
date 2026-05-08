@@ -192,6 +192,7 @@ fun AdBanner(
             }
 
             override fun onNoAd(error: IAdLoadingError, nativeAd: NativeAd) {}
+            override fun onClick(p0: View?, p1: NativeAd) {}
             override fun onClick(nativeAd: NativeAd) {}
             override fun onVideoPlay(nativeAd: NativeAd) {}
             override fun onVideoPause(nativeAd: NativeAd) {}

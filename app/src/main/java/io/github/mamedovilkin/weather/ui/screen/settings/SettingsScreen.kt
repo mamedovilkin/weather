@@ -1,45 +1,56 @@
 package io.github.mamedovilkin.weather.ui.screen.settings
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
+import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.mamedovilkin.weather.BuildConfig
 import io.github.mamedovilkin.weather.R
-import io.github.mamedovilkin.weather.ui.theme.primary
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.res.painterResource
+import io.github.mamedovilkin.weather.domain.model.PressureUnit
 import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
 import io.github.mamedovilkin.weather.ui.theme.onPrimary
+import io.github.mamedovilkin.weather.ui.theme.primary
 import org.koin.androidx.compose.koinViewModel
+import java.util.*
 
 @Composable
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
+    val context = LocalContext.current
     val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+    val message = stringResource(R.string.restart_the_app_to_apply_changes)
 
     LaunchedEffect(Unit) {
-        settingsViewModel.fetchUnit()
+        settingsViewModel.fetchUnits()
+    }
+
+    LaunchedEffect(uiState.showMassage) {
+        if (uiState.showMassage) {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            settingsViewModel.setShowMassage(false)
+        }
     }
 
     Column(
@@ -47,6 +58,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .statusBarsPadding()
             .padding(8.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Text(
             text = stringResource(R.string.settings),
@@ -58,64 +70,249 @@ fun SettingsScreen(
                 .fillMaxWidth()
                 .padding(16.dp)
         )
+        TemperatureUnitItem(uiState, settingsViewModel)
+        SettingsDivider()
+        PressureUnitItem(uiState, settingsViewModel)
+        SettingsDivider()
+        LanguageItem(context)
+        SettingsDivider()
+        FeedbackItem(context)
+        SettingsDivider()
+        AppVersionItem(context)
+        Spacer(modifier = Modifier.height(72.dp))
+    }
+}
+
+@Composable
+fun TemperatureUnitItem(
+    uiState: SettingsUiState,
+    settingsViewModel: SettingsViewModel,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.temperature_unit),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = primary,
+            modifier = Modifier.weight(1F)
+        )
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier
+                .clickable { settingsViewModel.setExpandedTemperatureUnit(true) }
         ) {
             Text(
-                text = stringResource(R.string.temperature_unit),
+                text = if (uiState.temperatureUnit == TemperatureUnit.IMPERIAL) {
+                    stringResource(R.string.fahrenheit)
+                } else {
+                    stringResource(R.string.celsius)
+                },
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = primary,
-                modifier = Modifier.weight(1F)
+                color = primary
             )
-            Row(
-                modifier = Modifier
-                    .clickable { settingsViewModel.setExpanded(true) }
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow_down),
+                contentDescription = null,
+                tint = primary
+            )
+            DropdownMenu(
+                expanded = uiState.expandedTemperatureUnit,
+                onDismissRequest = { settingsViewModel.setExpandedTemperatureUnit(false) }
             ) {
-                Text(
-                    text = if (uiState.temperatureUnit == TemperatureUnit.IMPERIAL) {
-                        stringResource(R.string.fahrenheit)
-                    } else {
-                        stringResource(R.string.celsius)
-                    },
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = primary
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.celsius)) },
+                    onClick = {
+                        settingsViewModel.setExpandedTemperatureUnit(false)
+                        settingsViewModel.setUnit(TemperatureUnit.METRIC)
+                        settingsViewModel.setShowMassage(true)
+                    }
                 )
-                Icon(
-                    painter = painterResource(R.drawable.ic_arrow_down),
-                    contentDescription = null,
-                    tint = primary
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.fahrenheit)) },
+                    onClick = {
+                        settingsViewModel.setExpandedTemperatureUnit(false)
+                        settingsViewModel.setUnit(TemperatureUnit.IMPERIAL)
+                        settingsViewModel.setShowMassage(true)
+                    }
                 )
-                DropdownMenu(
-                    expanded = uiState.expanded,
-                    onDismissRequest = { settingsViewModel.setExpanded(false) }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.celsius)) },
-                        onClick = {
-                            settingsViewModel.setExpanded(false)
-                            settingsViewModel.setUnit(TemperatureUnit.METRIC)
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.fahrenheit)) },
-                        onClick = {
-                            settingsViewModel.setExpanded(false)
-                            settingsViewModel.setUnit(TemperatureUnit.IMPERIAL)
-                        }
-                    )
-                }
             }
         }
-        HorizontalDivider(
-            thickness = 1.dp,
-            color = onPrimary,
+    }
+}
+
+@Composable
+fun PressureUnitItem(
+    uiState: SettingsUiState,
+    settingsViewModel: SettingsViewModel,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.pressure_unit),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = primary,
+            modifier = Modifier.weight(1F)
+        )
+        Row(
             modifier = Modifier
-                .padding(vertical = 8.dp)
-                .alpha(0.5F)
+                .clickable { settingsViewModel.setExpandedPressureUnit(true) }
+        ) {
+            Text(
+                text = if (uiState.pressureUnit == PressureUnit.MB) {
+                    stringResource(R.string.mb_unit)
+                } else {
+                    stringResource(R.string.mmhg_unit)
+                },
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = primary
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow_down),
+                contentDescription = null,
+                tint = primary
+            )
+            DropdownMenu(
+                expanded = uiState.expandedPressureUnit,
+                onDismissRequest = { settingsViewModel.setExpandedPressureUnit(false) }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.mb_unit)) },
+                    onClick = {
+                        settingsViewModel.setExpandedPressureUnit(false)
+                        settingsViewModel.setUnit(PressureUnit.MB)
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.mmhg_unit)) },
+                    onClick = {
+                        settingsViewModel.setExpandedPressureUnit(false)
+                        settingsViewModel.setUnit(PressureUnit.MMHG)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@SuppressLint("LocalContextConfigurationRead")
+@Composable
+fun LanguageItem(context: Context) {
+    val locale = context.resources.configuration.locales[0]
+    val language = locale.getDisplayLanguage(locale)
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .clickable {
+                context.startActivity(Intent(Settings.ACTION_LOCALE_SETTINGS))
+            }
+            .padding(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.language),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = primary,
+            modifier = Modifier.weight(1F)
+        )
+        Row {
+            Text(
+                text = language.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() },
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = primary
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow_right),
+                contentDescription = null,
+                tint = primary,
+                modifier = Modifier
+                    .padding(4.dp)
+                    .size(14.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun FeedbackItem(
+    context: Context
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .clickable {
+                val subject = context.getString(R.string.app_name)
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = "mailto:${BuildConfig.FEEDBACK_EMAIL}?subject=$subject".toUri()
+                }
+                context.startActivity(intent)
+            }
+            .padding(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.feedback),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = primary,
+            modifier = Modifier.weight(1F)
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_arrow_right),
+            contentDescription = null,
+            tint = primary,
+            modifier = Modifier
+                .padding(4.dp)
+                .size(14.dp)
         )
     }
+}
+
+@Composable
+fun AppVersionItem(
+    context: Context
+) {
+    val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.app_version),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = primary,
+            modifier = Modifier.weight(1F)
+        )
+        Text(
+            text = packageInfo.versionName.toString(),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = primary
+        )
+    }
+}
+
+@Composable
+fun SettingsDivider() {
+    HorizontalDivider(
+        thickness = 1.dp,
+        color = onPrimary,
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+            .alpha(0.5F)
+    )
 }

@@ -12,4 +12,6 @@ data class Weather(
     val humidity: Int,
     val pressure: Int,
     val datetime: String
-)
+) {
+    val mmHG = (pressure * 0.750) * 100 / 100
+}

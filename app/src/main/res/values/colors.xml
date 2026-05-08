@@ -2,4 +2,5 @@
 <resources>
     <color name="background">#1A1C1E</color>
     <color name="navigation">#252728</color>
+    <color name="widget">#661A1C1E</color>
 </resources>

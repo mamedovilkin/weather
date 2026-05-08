@@ -20,8 +20,19 @@
     <string name="results_found">Results found: %1$s</string>
     <string name="ms">%1$s m/s</string>
     <string name="mh">%1$s m/h</string>
-    <string name="mb">%1$s MB</string>
+    <string name="mb">%1$s mb</string>
+    <string name="mmhg">%1$s mm Hg</string>
     <string name="server_timeout">Server timeout. Please try again later.</string>
     <string name="no_internet_connection">No internet connection. Please try again later.</string>
     <string name="cannot_connect_to_server">Cannot connect to server. Please try again later.</string>
+    <string name="pressure_unit">Pressure unit</string>
+    <string name="mb_unit">mb</string>
+    <string name="mmhg_unit">mm Hg</string>
+    <string name="language">Language</string>
+    <string name="feedback">Feedback</string>
+    <string name="app_version">App version</string>
+    <string name="restart_the_app_to_apply_changes">Restart the app to apply changes.</string>
+    <string name="widget_summary">%1$s\nfeels like %2$s°%3$s</string>
+    <string name="loading">Loading…</string>
+    <string name="weather_widget_description">See current weather in your city</string>
 </resources>

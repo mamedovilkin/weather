@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -88,7 +89,7 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        homeViewModel.fetchUnit()
+        homeViewModel.fetchUnits()
     }
 
     when (val screenState = uiState.homeScreenState) {
@@ -96,7 +97,7 @@ fun HomeScreen(
         is HomeScreenState.Failure -> {
             ErrorScreen(
                 e = screenState.e,
-                onRetry = { homeViewModel.fetchUnit() }
+                onRetry = { homeViewModel.fetchUnits() }
             )
         }
         is HomeScreenState.Success -> {
@@ -425,6 +426,7 @@ fun DailyForecast(
                         maxLines = 2,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
+                        autoSize = TextAutoSize.StepBased(maxFontSize = 14.sp),
                         color = onPrimary,
                         modifier = Modifier.weight(1F)
                     )
