@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.mamedovilkin.weather.domain.model.PressureUnit
 import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
+import io.github.mamedovilkin.weather.domain.model.WindSpeedUnit
 import io.github.mamedovilkin.weather.domain.model.convertToPressureUnit
 import io.github.mamedovilkin.weather.domain.model.convertToTemperatureUnit
+import io.github.mamedovilkin.weather.domain.model.convertToWindSpeedUnit
 import io.github.mamedovilkin.weather.domain.usecase.SettingsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +19,9 @@ import kotlinx.coroutines.launch
 
 data class SettingsUiState(
     val expandedTemperatureUnit: Boolean = false,
-    val temperatureUnit: TemperatureUnit = TemperatureUnit.METRIC,
+    val temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
+    val expandedWindSpeedUnit: Boolean = false,
+    val windSpeedUnit: WindSpeedUnit = WindSpeedUnit.MS,
     val expandedPressureUnit: Boolean = false,
     val pressureUnit: PressureUnit = PressureUnit.MMHG,
     val showMassage: Boolean = false,
@@ -36,6 +40,13 @@ class SettingsViewModel(
         }
     }
 
+    fun setExpandedWindSpeedUnit(expandedWindSpeedUnit: Boolean) {
+        _uiState.update { currentState ->
+            currentState.copy(expandedWindSpeedUnit = expandedWindSpeedUnit)
+        }
+    }
+
+
     fun setExpandedPressureUnit(expandedPressureUnit: Boolean) {
         _uiState.update { currentState ->
             currentState.copy(expandedPressureUnit = expandedPressureUnit)
@@ -46,6 +57,10 @@ class SettingsViewModel(
         settingsUseCase.setTemperatureUnit(temperatureUnit)
     }
 
+    fun setUnit(windSpeedUnit: WindSpeedUnit) = viewModelScope.launch {
+        settingsUseCase.setWindSpeedUnit(windSpeedUnit)
+    }
+
     fun setUnit(pressureUnit: PressureUnit) = viewModelScope.launch {
         settingsUseCase.setPressureUnit(pressureUnit)
     }
@@ -53,16 +68,19 @@ class SettingsViewModel(
     fun fetchUnits() = viewModelScope.launch {
         combine(
             settingsUseCase.temperatureUnit,
+            settingsUseCase.windSpeedUnit,
             settingsUseCase.pressureUnit
-        ) { temp, pressure ->
-            temp to pressure
+        ) { temp, windSpeed, pressure ->
+            Triple(temp, windSpeed, pressure)
         }
             .catch {
-                setTemperatureUnit(TemperatureUnit.METRIC)
+                setTemperatureUnit(TemperatureUnit.CELSIUS)
+                setWindSpeedUnit(WindSpeedUnit.MS)
                 setPressureUnit(PressureUnit.MMHG)
             }
-            .collect { (temp, pressure) ->
+            .collect { (temp, windSpeed, pressure) ->
                 setTemperatureUnit(temp.convertToTemperatureUnit())
+                setWindSpeedUnit(windSpeed.convertToWindSpeedUnit())
                 setPressureUnit(pressure.convertToPressureUnit())
             }
     }
@@ -70,6 +88,12 @@ class SettingsViewModel(
     private fun setTemperatureUnit(temperatureUnit: TemperatureUnit) {
         _uiState.update { currentState ->
             currentState.copy(temperatureUnit = temperatureUnit)
+        }
+    }
+
+    private fun setWindSpeedUnit(windSpeedUnit: WindSpeedUnit) {
+        _uiState.update { currentState ->
+            currentState.copy(windSpeedUnit = windSpeedUnit)
         }
     }
 

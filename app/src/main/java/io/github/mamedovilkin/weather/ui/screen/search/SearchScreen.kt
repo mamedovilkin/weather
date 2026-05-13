@@ -36,11 +36,9 @@ import io.github.mamedovilkin.weather.ui.screen.state.NoResultsScreen
 import io.github.mamedovilkin.weather.ui.theme.background
 import io.github.mamedovilkin.weather.ui.theme.onPrimary
 import io.github.mamedovilkin.weather.ui.theme.primary
-import io.github.mamedovilkin.weather.util.textWithEllipsis
 import org.koin.androidx.compose.koinViewModel
 import io.github.mamedovilkin.weather.domain.model.Location
 import io.github.mamedovilkin.weather.ui.components.SearchBar
-import java.util.Locale
 
 @Composable
 fun SearchScreen(
@@ -139,27 +137,29 @@ fun LocationsList(
                         .padding(end = 8.dp)
                 ) {
                     Text(
-                        text = if (Locale.getDefault().language == "ru") location.ru?.textWithEllipsis() ?: location.name.textWithEllipsis() else location.en?.textWithEllipsis() ?: location.name.textWithEllipsis(),
+                        text = location.name,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = primary,
                     )
-                    Text(
-                        text = "${location.state}, ${location.country}".textWithEllipsis(),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = onPrimary,
-                    )
+                    if (location.country != null) {
+                        Text(
+                            text = location.country!!,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = onPrimary,
+                        )
+                    }
                 }
                 Button(
-                    onClick = { onSetLocation(location.lat, location.lon) },
+                    onClick = { onSetLocation(location.latitude, location.longitude) },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (
-                            location.lat == selectedLat && location.lon == selectedLon
+                            location.latitude == selectedLat && location.longitude == selectedLon
                         ) primary.copy(alpha = 0.1F) else primary
                     )
                 ) {
-                    if (location.lat == selectedLat && location.lon == selectedLon) {
+                    if (location.latitude == selectedLat && location.longitude == selectedLon) {
                         Icon(
                             painter = painterResource(R.drawable.ic_done),
                             contentDescription = null,
@@ -178,13 +178,19 @@ fun LocationsList(
                     }
                 }
             }
-            HorizontalDivider(
-                thickness = 1.dp,
-                color = onPrimary,
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .alpha(0.5F)
-            )
+            if (locations.indexOf(location) != locations.size - 1) {
+                HorizontalDivider(
+                    thickness = 1.dp,
+                    color = onPrimary,
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .alpha(0.5F)
+                )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(72.dp))
         }
     }
 }

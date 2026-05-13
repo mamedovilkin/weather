@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -17,9 +19,8 @@ android {
         applicationId = "io.github.mamedovilkin.weather"
         minSdk = 24
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.2"
-
+        versionCode = 4
+        versionName = "1.3"
 
         val localPropertiesFile = rootProject.file("local.properties")
         val localProperties = Properties()
@@ -71,5 +72,8 @@ dependencies {
     implementation(libs.bundles.room)
     implementation(libs.mytarget)
     implementation(libs.androidx.glance.appwidget)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
     ksp(libs.room.compiler)
 }

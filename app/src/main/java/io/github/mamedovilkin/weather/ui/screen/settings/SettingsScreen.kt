@@ -29,6 +29,7 @@ import io.github.mamedovilkin.weather.BuildConfig
 import io.github.mamedovilkin.weather.R
 import io.github.mamedovilkin.weather.domain.model.PressureUnit
 import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
+import io.github.mamedovilkin.weather.domain.model.WindSpeedUnit
 import io.github.mamedovilkin.weather.ui.theme.onPrimary
 import io.github.mamedovilkin.weather.ui.theme.primary
 import org.koin.androidx.compose.koinViewModel
@@ -70,9 +71,35 @@ fun SettingsScreen(
                 .fillMaxWidth()
                 .padding(16.dp)
         )
-        TemperatureUnitItem(uiState, settingsViewModel)
+        TemperatureUnitItem(
+            uiState = uiState,
+            onExpand = { settingsViewModel.setExpandedTemperatureUnit(it) },
+            onItemSelected = {
+                settingsViewModel.setUnit(it)
+                settingsViewModel.setExpandedTemperatureUnit(false)
+                settingsViewModel.setShowMassage(true)
+            }
+        )
         SettingsDivider()
-        PressureUnitItem(uiState, settingsViewModel)
+        WindSpeedUnitItem(
+            uiState = uiState,
+            onExpand = { settingsViewModel.setExpandedWindSpeedUnit(it) },
+            onItemSelected = {
+                settingsViewModel.setUnit(it)
+                settingsViewModel.setExpandedWindSpeedUnit(false)
+                settingsViewModel.setShowMassage(true)
+            }
+        )
+        SettingsDivider()
+        PressureUnitItem(
+            uiState = uiState,
+            onExpand = { settingsViewModel.setExpandedPressureUnit(it) },
+            onItemSelected = {
+                settingsViewModel.setUnit(it)
+                settingsViewModel.setExpandedPressureUnit(false)
+                settingsViewModel.setShowMassage(true)
+            }
+        )
         SettingsDivider()
         LanguageItem(context)
         SettingsDivider()
@@ -86,7 +113,8 @@ fun SettingsScreen(
 @Composable
 fun TemperatureUnitItem(
     uiState: SettingsUiState,
-    settingsViewModel: SettingsViewModel,
+    onExpand: (Boolean) -> Unit,
+    onItemSelected: (TemperatureUnit) -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -102,10 +130,10 @@ fun TemperatureUnitItem(
         )
         Row(
             modifier = Modifier
-                .clickable { settingsViewModel.setExpandedTemperatureUnit(true) }
+                .clickable { onExpand(true) }
         ) {
             Text(
-                text = if (uiState.temperatureUnit == TemperatureUnit.IMPERIAL) {
+                text = if (uiState.temperatureUnit == TemperatureUnit.FAHRENHEIT) {
                     stringResource(R.string.fahrenheit)
                 } else {
                     stringResource(R.string.celsius)
@@ -121,22 +149,88 @@ fun TemperatureUnitItem(
             )
             DropdownMenu(
                 expanded = uiState.expandedTemperatureUnit,
-                onDismissRequest = { settingsViewModel.setExpandedTemperatureUnit(false) }
+                onDismissRequest = { onExpand(false) }
             ) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.celsius)) },
                     onClick = {
-                        settingsViewModel.setExpandedTemperatureUnit(false)
-                        settingsViewModel.setUnit(TemperatureUnit.METRIC)
-                        settingsViewModel.setShowMassage(true)
+                        onItemSelected(TemperatureUnit.CELSIUS)
                     }
                 )
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.fahrenheit)) },
                     onClick = {
-                        settingsViewModel.setExpandedTemperatureUnit(false)
-                        settingsViewModel.setUnit(TemperatureUnit.IMPERIAL)
-                        settingsViewModel.setShowMassage(true)
+                        onItemSelected(TemperatureUnit.FAHRENHEIT)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun WindSpeedUnitItem(
+    uiState: SettingsUiState,
+    onExpand: (Boolean) -> Unit,
+    onItemSelected: (WindSpeedUnit) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.wind_speed_unit),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = primary,
+            modifier = Modifier.weight(1F)
+        )
+        Row(
+            modifier = Modifier
+                .clickable { onExpand(true) }
+        ) {
+            Text(
+                text = when (uiState.windSpeedUnit) {
+                    WindSpeedUnit.KMH -> {
+                        stringResource(R.string.kmh_unit)
+                    }
+                    WindSpeedUnit.MPH -> {
+                        stringResource(R.string.mph_unit)
+                    }
+                    else -> {
+                        stringResource(R.string.ms_unit)
+                    }
+                },
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = primary
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow_down),
+                contentDescription = null,
+                tint = primary
+            )
+            DropdownMenu(
+                expanded = uiState.expandedWindSpeedUnit,
+                onDismissRequest = { onExpand(false) }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.kmh_unit)) },
+                    onClick = {
+                        onItemSelected(WindSpeedUnit.KMH)
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.ms_unit)) },
+                    onClick = {
+                        onItemSelected(WindSpeedUnit.MS)
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.mph_unit)) },
+                    onClick = {
+                        onItemSelected(WindSpeedUnit.MPH)
                     }
                 )
             }
@@ -147,7 +241,8 @@ fun TemperatureUnitItem(
 @Composable
 fun PressureUnitItem(
     uiState: SettingsUiState,
-    settingsViewModel: SettingsViewModel,
+    onExpand: (Boolean) -> Unit,
+    onItemSelected: (PressureUnit) -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -163,7 +258,7 @@ fun PressureUnitItem(
         )
         Row(
             modifier = Modifier
-                .clickable { settingsViewModel.setExpandedPressureUnit(true) }
+                .clickable { onExpand(true) }
         ) {
             Text(
                 text = if (uiState.pressureUnit == PressureUnit.MB) {
@@ -182,20 +277,18 @@ fun PressureUnitItem(
             )
             DropdownMenu(
                 expanded = uiState.expandedPressureUnit,
-                onDismissRequest = { settingsViewModel.setExpandedPressureUnit(false) }
+                onDismissRequest = { onExpand(false) }
             ) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.mb_unit)) },
                     onClick = {
-                        settingsViewModel.setExpandedPressureUnit(false)
-                        settingsViewModel.setUnit(PressureUnit.MB)
+                        onItemSelected(PressureUnit.MB)
                     }
                 )
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.mmhg_unit)) },
                     onClick = {
-                        settingsViewModel.setExpandedPressureUnit(false)
-                        settingsViewModel.setUnit(PressureUnit.MMHG)
+                        onItemSelected(PressureUnit.MMHG)
                     }
                 )
             }

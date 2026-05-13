@@ -1,11 +1,13 @@
 package io.github.mamedovilkin.weather
 
 import android.app.Application
+import android.location.Geocoder
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.my.target.common.MyTargetManager
+import io.github.mamedovilkin.weather.data.client.GeoCodingHttpClient
 import io.github.mamedovilkin.weather.data.client.WeatherHttpClient
 import io.github.mamedovilkin.weather.data.dao.WeatherDao
 import io.github.mamedovilkin.weather.data.database.WeatherDatabase
@@ -22,9 +24,9 @@ import io.github.mamedovilkin.weather.domain.usecase.WidgetUseCase
 import io.github.mamedovilkin.weather.ui.screen.home.HomeViewModel
 import io.github.mamedovilkin.weather.ui.screen.search.SearchViewModel
 import io.github.mamedovilkin.weather.ui.screen.settings.SettingsViewModel
-import io.ktor.client.HttpClient
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
+import java.util.Locale
 
 class WeatherApp : Application() {
 
@@ -36,13 +38,11 @@ class WeatherApp : Application() {
         startKoin {
             modules(
                 module {
-                    single<HttpClient> { WeatherHttpClient.getInstance() }
-
                     single<WeatherDao> { WeatherDatabase.getDatabase(this@WeatherApp).weatherDao() }
 
                     single<LocationService> { LocationServiceImpl(this@WeatherApp) }
 
-                    single<NetworkRepository> { NetworkRepositoryImpl(get(), get()) }
+                    single<NetworkRepository> { NetworkRepositoryImpl(Geocoder(this@WeatherApp, Locale.getDefault()), WeatherHttpClient.getInstance(), GeoCodingHttpClient.getInstance(), get()) }
 
                     single<DataStore<Preferences>> { PreferenceDataStoreFactory.create { this@WeatherApp.preferencesDataStoreFile("weather_preferences") } }
 
@@ -56,7 +56,7 @@ class WeatherApp : Application() {
 
                     single<WidgetUseCase> { WidgetUseCase(get(), get()) }
 
-                    single<HomeViewModel> { HomeViewModel(this@WeatherApp, get()) }
+                    single<HomeViewModel> { HomeViewModel(get()) }
 
                     single<SearchViewModel> { SearchViewModel(get()) }
 

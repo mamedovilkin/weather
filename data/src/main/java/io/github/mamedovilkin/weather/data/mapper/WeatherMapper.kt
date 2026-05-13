@@ -1,0 +1,57 @@
+package io.github.mamedovilkin.weather.data.mapper
+
+import io.github.mamedovilkin.weather.data.entity.DailyEntity
+import io.github.mamedovilkin.weather.data.entity.HourlyEntity
+import io.github.mamedovilkin.weather.data.entity.WeatherEntity
+import io.github.mamedovilkin.weather.data.model.WeatherDto
+import io.github.mamedovilkin.weather.domain.model.Daily
+import io.github.mamedovilkin.weather.domain.model.Hourly
+import io.github.mamedovilkin.weather.domain.model.Weather
+
+fun WeatherDto.toEntityWeather(name: String?) =
+    WeatherEntity(
+        name = name,
+        latitude = latitude,
+        longitude = longitude,
+        temperature = current.temperature_2m,
+        feelsLike = current.apparent_temperature,
+        weatherCode = current.weather_code,
+        wind = current.wind_speed_10m,
+        humidity = current.relative_humidity_2m,
+        pressure = current.surface_pressure,
+        hourly = HourlyEntity(
+            times = hourly.time,
+            temperatures = hourly.temperature_2m,
+            weatherCodes = hourly.weather_code,
+        ),
+        daily = DailyEntity(
+            times = daily.time,
+            maxTemperatures = daily.temperature_2m_max,
+            minTemperatures = daily.temperature_2m_min,
+            weatherCodes = daily.weather_code,
+        )
+    )
+
+fun WeatherEntity.toDomainWeather() =
+    Weather(
+        name = name,
+        latitude = latitude,
+        longitude = longitude,
+        temperature = temperature,
+        feelsLike = feelsLike,
+        weatherCode = weatherCode,
+        wind = wind,
+        humidity = humidity,
+        pressure = pressure,
+        hourly = Hourly(
+            times = hourly.times,
+            temperatures = hourly.temperatures,
+            weatherCodes = hourly.weatherCodes,
+        ),
+        daily = Daily(
+            times = daily.times,
+            maxTemperatures = daily.maxTemperatures,
+            minTemperatures = daily.minTemperatures,
+            weatherCodes = daily.weatherCodes,
+        )
+    )

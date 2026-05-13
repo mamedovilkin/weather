@@ -1,17 +1,17 @@
 package io.github.mamedovilkin.weather.domain.model
 
 data class Weather(
-    val name: String,
-    val icon: String,
-    val description: String,
+    val name: String?,
+    val latitude: Double,
+    val longitude: Double,
     val temperature: Double,
-    val maxTemperature: Double,
-    val minTemperature: Double,
     val feelsLike: Double,
-    val windSpeed: Double,
+    val weatherCode: Int,
+    val wind: Double,
     val humidity: Int,
-    val pressure: Int,
-    val datetime: String
+    val pressure: Double,
+    val hourly: Hourly,
+    val daily: Daily
 ) {
-    val mmHG = (pressure * 0.750) * 100 / 100
+    val mmHG = pressure * 0.750
 }

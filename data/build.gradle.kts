@@ -20,7 +20,7 @@ android {
         localProperties.load(FileInputStream(localPropertiesFile))
 
         buildConfigField("String", "BASE_URL", localProperties["BASE_URL"].toString())
-        buildConfigField("String", "APP_ID", localProperties["APP_ID"].toString())
+        buildConfigField("String", "GEOCODING_URL", localProperties["GEOCODING_URL"].toString())
     }
 
     buildTypes {

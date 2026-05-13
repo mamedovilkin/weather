@@ -84,12 +84,12 @@ class SearchViewModel(
 
         searchUseCase
             .searchLocation(searchQuery)
-            .onSuccess { data ->
+            .onSuccess { locations ->
                 _uiState.update { currentState ->
-                    if (data.isNotEmpty()) {
+                    if (locations.isNotEmpty()) {
                         currentState.copy(
                             searchScreenState = SearchScreenState.Success(
-                                locations = data.map { it.copy(state = it.state ?: it.name) }
+                                locations = locations
                             )
                         )
                     } else {

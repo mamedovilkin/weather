@@ -6,11 +6,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import io.github.mamedovilkin.weather.data.dao.WeatherDao
-import io.github.mamedovilkin.weather.data.entity.ForecastEntity
 import io.github.mamedovilkin.weather.data.entity.WeatherEntity
 
-@Database(entities = [WeatherEntity::class, ForecastEntity::class], version = 1, exportSchema = false)
-@TypeConverters(ListConverter::class)
+@Database(entities = [WeatherEntity::class], version = 2, exportSchema = false)
+@TypeConverters(WeatherConverters::class)
 abstract class WeatherDatabase : RoomDatabase() {
 
     abstract fun weatherDao(): WeatherDao
@@ -25,7 +24,7 @@ abstract class WeatherDatabase : RoomDatabase() {
                     context,
                     WeatherDatabase::class.java,
                     "Weather"
-                ).build()
+                ).addMigrations(MIGRATION_1_2).build()
 
                 INSTANCE = instance
 

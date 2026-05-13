@@ -3,6 +3,7 @@
 package io.github.mamedovilkin.weather.ui.screen.home
 
 import android.Manifest
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
@@ -26,7 +27,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -58,8 +58,10 @@ import io.github.mamedovilkin.weather.ui.theme.primary
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import io.github.mamedovilkin.weather.domain.model.PressureUnit
 import io.github.mamedovilkin.weather.ui.screen.state.ErrorScreen
 import io.github.mamedovilkin.weather.ui.screen.state.LoadingScreen
 import io.github.mamedovilkin.weather.ui.theme.onPrimary
@@ -67,11 +69,13 @@ import io.github.mamedovilkin.weather.ui.theme.surface
 import kotlin.math.ceil
 import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
 import io.github.mamedovilkin.weather.domain.model.Weather
+import io.github.mamedovilkin.weather.domain.model.WindSpeedUnit
 import io.github.mamedovilkin.weather.domain.model.convertToSymbol
 import io.github.mamedovilkin.weather.ui.components.AdBanner
-import io.github.mamedovilkin.weather.util.WeatherStat
 import io.github.mamedovilkin.weather.util.getDate
 import io.github.mamedovilkin.weather.util.getSeasonImageOfYear
+import io.github.mamedovilkin.weather.util.getTime
+import io.github.mamedovilkin.weather.util.getWeatherDescription
 import io.github.mamedovilkin.weather.util.getWeatherIcon
 import kotlinx.serialization.InternalSerializationApi
 import org.koin.androidx.compose.koinViewModel
@@ -81,6 +85,7 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = koinViewModel(),
     onNavigateToSearch: (String) -> Unit
 ) {
+    val context = LocalContext.current
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -112,14 +117,21 @@ fun HomeScreen(
                 ) {
                     CurrentWeather(
                         seasonImage = getSeasonImageOfYear(),
-                        weather = screenState.currentWeather,
+                        weather = screenState.weather,
                         temperatureUnit = uiState.temperatureUnit,
                         onNavigateToSearch = onNavigateToSearch
                     )
-                    WeatherStats(screenState.weatherStats)
-                    AdBanner(1917863)
-                    HourlyForecast(screenState.hourlyForecast)
-                    DailyForecast(screenState.dailyForecast)
+                    WeatherStats(
+                        weather = screenState.weather,
+                        windSpeedUnit = uiState.windSpeedUnit,
+                        pressureUnit = uiState.pressureUnit,
+                    )
+                    AdBanner(slotId = 1917863)
+                    HourlyForecast(
+                        weather = screenState.weather,
+                        context = context
+                    )
+                    DailyForecast(weather = screenState.weather)
                     Spacer(modifier = Modifier.height(72.dp))
                 }
                 FloatingActionButton(
@@ -152,6 +164,8 @@ fun CurrentWeather(
     temperatureUnit: TemperatureUnit,
     onNavigateToSearch: (String) -> Unit,
 ) {
+    val unknown = stringResource(R.string.unknown)
+
     Box(
         modifier = Modifier
             .statusBarsPadding()
@@ -197,7 +211,7 @@ fun CurrentWeather(
                     )
                     .padding(vertical = 2.dp)
                     .padding(horizontal = 8.dp)
-                    .clickable { onNavigateToSearch(weather.name) }
+                    .clickable { onNavigateToSearch(weather.name ?: unknown) }
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_location),
@@ -207,7 +221,7 @@ fun CurrentWeather(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = weather.name,
+                    text = weather.name ?: unknown,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Normal,
                     color = primary
@@ -227,7 +241,7 @@ fun CurrentWeather(
                 modifier = Modifier.fillMaxSize()
             ) {
                 Image(
-                    painter = painterResource(getWeatherIcon(weather.icon)),
+                    painter = painterResource(getWeatherIcon(weather.weatherCode)),
                     contentDescription = null,
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.size(88.dp),
@@ -243,7 +257,7 @@ fun CurrentWeather(
                     color = primary,
                 )
                 Text(
-                    text = stringResource(R.string.feels_like, weather.description, ceil(weather.feelsLike).toInt(), temperatureUnit.convertToSymbol()),
+                    text = stringResource(R.string.feels_like, stringResource(getWeatherDescription(weather.weatherCode)).lowercase(), ceil(weather.feelsLike).toInt(), temperatureUnit.convertToSymbol()),
                     textAlign = TextAlign.Center,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Normal,
@@ -256,54 +270,122 @@ fun CurrentWeather(
 
 @Composable
 fun WeatherStats(
-    stats: List<WeatherStat>
+    weather: Weather,
+    windSpeedUnit: WindSpeedUnit,
+    pressureUnit: PressureUnit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        stats.forEach { stat ->
-            Column(
-                modifier = Modifier
-                    .weight(1F)
-                    .aspectRatio(1F)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                cardBackgroundGradientStart,
-                                cardBackgroundGradientEnd
-                            )
+        WeatherStat(
+            icon = R.drawable.ic_wind,
+            title = R.string.wind,
+            stat = stringResource(
+                when (windSpeedUnit) {
+                    WindSpeedUnit.KMH -> R.string.kmh
+                    WindSpeedUnit.MPH -> R.string.mph
+                    else -> R.string.ms
+                }, weather.wind
+            ),
+            modifier = Modifier
+                .weight(1F)
+                .aspectRatio(1F)
+                .clip(RoundedCornerShape(24.dp))
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            cardBackgroundGradientStart,
+                            cardBackgroundGradientEnd
                         )
                     )
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Icon(
-                    painter = painterResource(stat.icon),
-                    contentDescription = null,
-                    tint = primary,
-                    modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(stat.title),
-                    color = primary,
-                    fontSize = 18.sp,
+                .padding(8.dp),
+        )
+        WeatherStat(
+            icon = R.drawable.ic_pressure,
+            title = R.string.pressure,
+            stat = if (pressureUnit == PressureUnit.MB) {
+                stringResource(R.string.mb, weather.pressure)
+            } else {
+                stringResource(R.string.mmhg, weather.mmHG)
+            },
+            modifier = Modifier
+                .weight(1F)
+                .aspectRatio(1F)
+                .clip(RoundedCornerShape(24.dp))
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            cardBackgroundGradientStart,
+                            cardBackgroundGradientEnd
+                        )
+                    )
                 )
-                Text(
-                    text = stat.stat,
-                    color = primary,
-                    fontSize = 18.sp,
+                .padding(8.dp),
+        )
+        WeatherStat(
+            icon = R.drawable.ic_humidity,
+            title = R.string.humidity,
+            stat = "${weather.humidity}%",
+            modifier = Modifier
+                .weight(1F)
+                .aspectRatio(1F)
+                .clip(RoundedCornerShape(24.dp))
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            cardBackgroundGradientStart,
+                            cardBackgroundGradientEnd
+                        )
+                    )
                 )
-            }
+                .padding(8.dp),
+        )
+    }
+}
+
+@Composable
+fun WeatherStat(
+    icon: Int,
+    title: Int,
+    stat: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = primary.copy(alpha = 0.2F),
+            modifier = Modifier.fillMaxSize()
+        )
+        Column(
+            modifier = Modifier.align(Alignment.BottomStart)
+        ) {
+            Text(
+                text = stringResource(title),
+                color = primary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
+            Text(
+                text = stat,
+                color = primary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
         }
     }
 }
 
 @Composable
 fun HourlyForecast(
-    hourlyForecast: List<Weather>
+    weather: Weather,
+    context: Context
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -318,27 +400,29 @@ fun HourlyForecast(
             contentPadding = PaddingValues(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            items(hourlyForecast) { weather ->
+            items(24) { i ->
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(8.dp)
                 ) {
                     Text(
-                        text = weather.datetime,
+                        text = getTime(context, weather.hourly.times[i]),
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Normal,
                         fontSize = 18.sp,
                         color = primary
                     )
                     Image(
-                        painter = painterResource(getWeatherIcon(weather.icon)),
+                        painter = painterResource(getWeatherIcon(weather.hourly.weatherCodes[i])),
                         contentScale = ContentScale.Crop,
                         contentDescription = null,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .size(48.dp)
                     )
                     Text(
-                        text = "${ceil(weather.temperature).toInt()}°",
+                        text = "${ceil(weather.hourly.temperatures[i]).toInt()}°",
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 24.sp,
@@ -352,7 +436,7 @@ fun HourlyForecast(
 
 @Composable
 fun DailyForecast(
-    dailyForecast: List<Weather>
+    weather: Weather
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -377,14 +461,14 @@ fun DailyForecast(
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            dailyForecast.forEach { weather ->
+            repeat(weather.daily.times.size) { index ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = weather.datetime,
+                        text = getDate(weather.daily.times[index]),
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
@@ -392,13 +476,15 @@ fun DailyForecast(
                         modifier = Modifier.weight(1F)
                     )
                     Image(
-                        painter = painterResource(getWeatherIcon(weather.icon)),
+                        painter = painterResource(getWeatherIcon(weather.daily.weatherCodes[index])),
                         contentScale = ContentScale.Crop,
                         contentDescription = null,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier
+                            .size(48.dp)
+                            .padding(4.dp)
                     )
                     Text(
-                        text = "${ceil(weather.maxTemperature).toInt()}°",
+                        text = "${ceil(weather.daily.minTemperatures[index]).toInt()}°",
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 24.sp,
@@ -413,7 +499,7 @@ fun DailyForecast(
                         color = onPrimary
                     )
                     Text(
-                        text = "${ceil(weather.minTemperature).toInt()}°",
+                        text = "${ceil(weather.daily.maxTemperatures[index]).toInt()}°",
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Normal,
                         fontSize = 18.sp,
@@ -421,7 +507,7 @@ fun DailyForecast(
                         modifier = Modifier.weight(1F)
                     )
                     Text(
-                        text = weather.description,
+                        text = stringResource(getWeatherDescription(weather.daily.weatherCodes[index])).lowercase(),
                         textAlign = TextAlign.Center,
                         maxLines = 2,
                         fontWeight = FontWeight.Normal,
@@ -431,7 +517,7 @@ fun DailyForecast(
                         modifier = Modifier.weight(1F)
                     )
                 }
-                if ((dailyForecast.size - 1) != dailyForecast.indexOf(weather)) {
+                if ((weather.daily.times.size - 1) != index) {
                     HorizontalDivider(
                         thickness = 1.dp,
                         color = onPrimary,
