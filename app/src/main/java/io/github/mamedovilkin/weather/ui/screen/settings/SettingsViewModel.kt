@@ -8,7 +8,12 @@ import io.github.mamedovilkin.weather.domain.model.WindSpeedUnit
 import io.github.mamedovilkin.weather.domain.model.convertToPressureUnit
 import io.github.mamedovilkin.weather.domain.model.convertToTemperatureUnit
 import io.github.mamedovilkin.weather.domain.model.convertToWindSpeedUnit
-import io.github.mamedovilkin.weather.domain.usecase.SettingsUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetPressureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetTemperatureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetWindSpeedUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SetPressureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SetTemperatureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SetWindSpeedUnitUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,7 +33,12 @@ data class SettingsUiState(
 )
 
 class SettingsViewModel(
-    private val settingsUseCase: SettingsUseCase
+    private val setTemperatureUnitUseCase: SetTemperatureUnitUseCase,
+    private val setWindSpeedUnitUseCase: SetWindSpeedUnitUseCase,
+    private val setPressureUnitUseCase: SetPressureUnitUseCase,
+    private val getTemperatureUnitUseCase: GetTemperatureUnitUseCase,
+    private val getWindSpeedUnitUseCase: GetWindSpeedUnitUseCase,
+    private val getPressureUnitUseCase: GetPressureUnitUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -54,22 +64,22 @@ class SettingsViewModel(
     }
 
     fun setUnit(temperatureUnit: TemperatureUnit) = viewModelScope.launch {
-        settingsUseCase.setTemperatureUnit(temperatureUnit)
+        setTemperatureUnitUseCase(temperatureUnit)
     }
 
     fun setUnit(windSpeedUnit: WindSpeedUnit) = viewModelScope.launch {
-        settingsUseCase.setWindSpeedUnit(windSpeedUnit)
+        setWindSpeedUnitUseCase(windSpeedUnit)
     }
 
     fun setUnit(pressureUnit: PressureUnit) = viewModelScope.launch {
-        settingsUseCase.setPressureUnit(pressureUnit)
+        setPressureUnitUseCase(pressureUnit)
     }
 
     fun fetchUnits() = viewModelScope.launch {
         combine(
-            settingsUseCase.temperatureUnit,
-            settingsUseCase.windSpeedUnit,
-            settingsUseCase.pressureUnit
+            getTemperatureUnitUseCase.temperatureUnit,
+            getWindSpeedUnitUseCase.windSpeedUnit,
+            getPressureUnitUseCase.pressureUnit
         ) { temp, windSpeed, pressure ->
             Triple(temp, windSpeed, pressure)
         }

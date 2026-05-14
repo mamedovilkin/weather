@@ -15,12 +15,19 @@ import io.github.mamedovilkin.weather.domain.repository.DataStoreRepository
 import io.github.mamedovilkin.weather.data.repository.DataStoreRepositoryImpl
 import io.github.mamedovilkin.weather.domain.repository.NetworkRepository
 import io.github.mamedovilkin.weather.data.repository.NetworkRepositoryImpl
-import io.github.mamedovilkin.weather.domain.usecase.SearchUseCase
-import io.github.mamedovilkin.weather.domain.usecase.SettingsUseCase
 import io.github.mamedovilkin.weather.domain.service.LocationService
 import io.github.mamedovilkin.weather.data.service.LocationServiceImpl
-import io.github.mamedovilkin.weather.domain.usecase.HomeUseCase
-import io.github.mamedovilkin.weather.domain.usecase.WidgetUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetCurrentLocationUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetCurrentWeatherUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetLocationUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetPressureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetTemperatureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetWindSpeedUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SearchLocationUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SetLocationUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SetPressureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SetTemperatureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SetWindSpeedUnitUseCase
 import io.github.mamedovilkin.weather.ui.screen.home.HomeViewModel
 import io.github.mamedovilkin.weather.ui.screen.search.SearchViewModel
 import io.github.mamedovilkin.weather.ui.screen.settings.SettingsViewModel
@@ -48,19 +55,33 @@ class WeatherApp : Application() {
 
                     single<DataStoreRepository> { DataStoreRepositoryImpl(get()) }
 
-                    single<SettingsUseCase> { SettingsUseCase(get()) }
+                    single<GetCurrentLocationUseCase> { GetCurrentLocationUseCase(get()) }
 
-                    single<SearchUseCase> { SearchUseCase(get(), get()) }
+                    single<GetCurrentWeatherUseCase> { GetCurrentWeatherUseCase(get()) }
 
-                    single<HomeUseCase> { HomeUseCase(get(), get(), get()) }
+                    single<GetLocationUseCase> { GetLocationUseCase(get()) }
 
-                    single<WidgetUseCase> { WidgetUseCase(get(), get()) }
+                    single<GetPressureUnitUseCase> { GetPressureUnitUseCase(get()) }
 
-                    single<HomeViewModel> { HomeViewModel(get()) }
+                    single<GetTemperatureUnitUseCase> { GetTemperatureUnitUseCase(get()) }
 
-                    single<SearchViewModel> { SearchViewModel(get()) }
+                    single<GetWindSpeedUnitUseCase> { GetWindSpeedUnitUseCase(get()) }
 
-                    single<SettingsViewModel> { SettingsViewModel(get()) }
+                    single<SearchLocationUseCase> { SearchLocationUseCase(get()) }
+
+                    single<SetLocationUseCase> { SetLocationUseCase(get()) }
+
+                    single<SetPressureUnitUseCase> { SetPressureUnitUseCase(get()) }
+
+                    single<SetTemperatureUnitUseCase> { SetTemperatureUnitUseCase(get()) }
+
+                    single<SetWindSpeedUnitUseCase> { SetWindSpeedUnitUseCase(get()) }
+
+                    single<HomeViewModel> { HomeViewModel(get(), get(), get(), get(), get(), get(), get()) }
+
+                    single<SearchViewModel> { SearchViewModel(get(), get(), get()) }
+
+                    single<SettingsViewModel> { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
                 }
             )
         }

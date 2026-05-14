@@ -2,6 +2,8 @@ package io.github.mamedovilkin.weather.data.repository
 
 import android.location.Address
 import android.location.Geocoder
+import android.os.Build
+import androidx.annotation.RequiresApi
 import io.github.mamedovilkin.weather.data.dao.WeatherDao
 import io.github.mamedovilkin.weather.data.mapper.toDomainLocation
 import io.github.mamedovilkin.weather.data.mapper.toDomainWeather
@@ -18,7 +20,9 @@ import io.github.mamedovilkin.weather.domain.util.safeRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.coroutines.resume
 
@@ -75,7 +79,21 @@ class NetworkRepositoryImpl(
     suspend fun getCityName(
         latitude: Double,
         longitude: Double
+    ): String? {
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getCityNameModern(latitude, longitude)
+        } else {
+            getCityNameLegacy(latitude, longitude)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private suspend fun getCityNameModern(
+        latitude: Double,
+        longitude: Double
     ): String? = suspendCancellableCoroutine { continuation ->
+
         geocoder.getFromLocation(
             latitude,
             longitude,
@@ -88,16 +106,33 @@ class NetworkRepositoryImpl(
                     val city = addresses
                         .firstOrNull()
                         ?.locality
-                    continuation.resume(city)
+
+                    if (continuation.isActive) {
+                        continuation.resume(city)
+                    }
                 }
 
                 override fun onError(
                     errorMessage: String?
                 ) {
-                    continuation.resume(null)
+                    if (continuation.isActive) {
+                        continuation.resume(null)
+                    }
                 }
             }
         )
+    }
+
+    @Suppress("DEPRECATION")
+    private suspend fun getCityNameLegacy(
+        latitude: Double,
+        longitude: Double
+    ): String? = withContext(Dispatchers.IO) {
+        runCatching {
+            geocoder.getFromLocation(latitude, longitude, 1)
+                ?.firstOrNull()
+                ?.locality
+        }.getOrNull()
     }
 
     override suspend fun searchLocation(query: String): Result<List<Location>> {

@@ -346,11 +346,16 @@ fun FeedbackItem(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
             .clickable {
-                val subject = context.getString(R.string.app_name)
-                val intent = Intent(Intent.ACTION_SENDTO).apply {
-                    data = "mailto:${BuildConfig.FEEDBACK_EMAIL}?subject=$subject".toUri()
+                try {
+                    val subject = context.getString(R.string.app_name)
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = "mailto:${BuildConfig.FEEDBACK_EMAIL}?subject=$subject".toUri()
+                    }
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(context, context.getString(R.string.please_install_an_email_app), Toast.LENGTH_LONG).show()
+                    e.printStackTrace()
                 }
-                context.startActivity(intent)
             }
             .padding(8.dp)
     ) {

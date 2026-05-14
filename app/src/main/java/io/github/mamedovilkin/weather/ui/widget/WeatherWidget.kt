@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -21,9 +20,9 @@ import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.components.Scaffold
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Alignment
@@ -41,26 +40,30 @@ import io.github.mamedovilkin.weather.R
 import io.github.mamedovilkin.weather.domain.model.convertToSymbol
 import io.github.mamedovilkin.weather.domain.model.convertToTemperatureUnit
 import io.github.mamedovilkin.weather.domain.model.convertToWindSpeedUnit
-import io.github.mamedovilkin.weather.domain.usecase.WidgetUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetCurrentWeatherUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetLocationUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetTemperatureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetWindSpeedUnitUseCase
 import io.github.mamedovilkin.weather.util.getSeasonImageOfYear
 import io.github.mamedovilkin.weather.util.getWeatherDescription
 import io.github.mamedovilkin.weather.util.getWeatherIcon
-import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.math.ceil
 
 class WeatherWidget : GlanceAppWidget(), KoinComponent {
 
-    private val widgetUseCase: WidgetUseCase by inject()
+    private val getTemperatureUnitUseCase: GetTemperatureUnitUseCase by inject()
+    private val getWindSpeedUnitUseCase: GetWindSpeedUnitUseCase by inject()
+    private val getLocationUseCase: GetLocationUseCase by inject()
+    private val getCurrentWeatherUseCase: GetCurrentWeatherUseCase by inject()
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
             val context = LocalContext.current
-            val coroutineScope = rememberCoroutineScope()
-            val temperatureUnit by widgetUseCase.temperatureUnit.collectAsState(null)
-            val windSpeedUnit by widgetUseCase.windSpeedUnit.collectAsState(null)
-            val location by widgetUseCase.location.collectAsState(null)
+            val temperatureUnit by getTemperatureUnitUseCase.temperatureUnit.collectAsState(null)
+            val windSpeedUnit by getWindSpeedUnitUseCase.windSpeedUnit.collectAsState(null)
+            val location by getLocationUseCase.location.collectAsState(null)
             val loading = context.getString(R.string.loading)
             var isLoading by remember { mutableStateOf(true) }
             var weatherCode by remember { mutableIntStateOf(0) }
@@ -69,8 +72,7 @@ class WeatherWidget : GlanceAppWidget(), KoinComponent {
 
             LaunchedEffect(location) {
                 if (temperatureUnit != null && windSpeedUnit != null && location != null) {
-                    widgetUseCase
-                        .getCurrentWeather(location!!.first(), location!!.last(), temperatureUnit!!.convertToTemperatureUnit(), windSpeedUnit!!.convertToWindSpeedUnit())
+                    getCurrentWeatherUseCase(location!!.first(), location!!.last(), temperatureUnit!!.convertToTemperatureUnit(), windSpeedUnit!!.convertToWindSpeedUnit())
                         .onSuccess { weather ->
                             weatherCode = weather.weatherCode
                             temperature = weather.temperature
@@ -88,11 +90,7 @@ class WeatherWidget : GlanceAppWidget(), KoinComponent {
                     horizontalPadding = 0.dp,
                     modifier = GlanceModifier
                         .fillMaxSize()
-                        .clickable {
-                            coroutineScope.launch {
-                                WeatherWidget().updateAll(context)
-                            }
-                        },
+                        .clickable(actionRunCallback<RefreshAction>()),
                 ) {
                     Box {
                         Image(

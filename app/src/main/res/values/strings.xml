@@ -64,4 +64,5 @@
     <string name="thunderstorm">Thunderstorm</string>
     <string name="thunderstorm_wit_hail">Thunderstorm with hail</string>
     <string name="unknown">Unknown</string>
+    <string name="please_install_an_email_app">Please install an email app.</string>
 </resources>

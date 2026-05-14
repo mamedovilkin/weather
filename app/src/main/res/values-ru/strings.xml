@@ -65,4 +65,5 @@
     <string name="thunderstorm">Гроза</string>
     <string name="thunderstorm_wit_hail">Гроза с градом</string>
     <string name="unknown">Неизвестно</string>
+    <string name="please_install_an_email_app">Пожалуйста, установите почтовое приложение.</string>
 </resources>

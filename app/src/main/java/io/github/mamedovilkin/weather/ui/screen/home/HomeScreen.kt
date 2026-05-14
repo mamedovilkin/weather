@@ -61,6 +61,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import coil.compose.AsyncImage
 import io.github.mamedovilkin.weather.domain.model.PressureUnit
 import io.github.mamedovilkin.weather.ui.screen.state.ErrorScreen
 import io.github.mamedovilkin.weather.ui.screen.state.LoadingScreen
@@ -171,8 +172,8 @@ fun CurrentWeather(
             .statusBarsPadding()
             .height(500.dp)
     ) {
-        Image(
-            painter = painterResource(seasonImage),
+        AsyncImage(
+            model = seasonImage,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier

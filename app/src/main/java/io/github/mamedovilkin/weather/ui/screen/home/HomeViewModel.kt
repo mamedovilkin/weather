@@ -11,7 +11,13 @@ import io.github.mamedovilkin.weather.domain.model.WindSpeedUnit
 import io.github.mamedovilkin.weather.domain.model.convertToPressureUnit
 import io.github.mamedovilkin.weather.domain.model.convertToTemperatureUnit
 import io.github.mamedovilkin.weather.domain.model.convertToWindSpeedUnit
-import io.github.mamedovilkin.weather.domain.usecase.HomeUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetCurrentLocationUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetCurrentWeatherUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetLocationUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetPressureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetTemperatureUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetWindSpeedUnitUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SetLocationUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,14 +45,20 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
-    private val homeUseCase: HomeUseCase
+    private val getTemperatureUnitUseCase: GetTemperatureUnitUseCase,
+    private val getWindSpeedUnitUseCase: GetWindSpeedUnitUseCase,
+    private val getPressureUnitUseCase: GetPressureUnitUseCase,
+    private val getLocationUseCase: GetLocationUseCase,
+    private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
+    private val setLocationUseCase: SetLocationUseCase,
+    private val getCurrentWeatherUseCase: GetCurrentWeatherUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     fun fetchUnits() = viewModelScope.launch {
-        combine(homeUseCase.temperatureUnit, homeUseCase.windSpeedUnit, homeUseCase.pressureUnit) { (temperatureUnit, windSpeedUnit, pressureUnit) ->
+        combine(getTemperatureUnitUseCase.temperatureUnit, getWindSpeedUnitUseCase.windSpeedUnit, getPressureUnitUseCase.pressureUnit) { (temperatureUnit, windSpeedUnit, pressureUnit) ->
             Triple(temperatureUnit, windSpeedUnit, pressureUnit)
         }.catch {
             setUnit(TemperatureUnit.CELSIUS)
@@ -61,7 +73,7 @@ class HomeViewModel(
     }
 
     fun fetchLocation() = viewModelScope.launch {
-        homeUseCase.location
+        getLocationUseCase.location
             .catch { e ->
                 setFailureHomeScreenState(Exception(e))
             }
@@ -82,9 +94,9 @@ class HomeViewModel(
     }
 
     fun fetchCurrentLocation() {
-        homeUseCase.getCurrentLocation { location ->
+        getCurrentLocationUseCase { location ->
             viewModelScope.launch {
-                homeUseCase.setLocation(
+                setLocationUseCase(
                     lat = location?.latitude ?: 0.0,
                     lon = location?.longitude ?: 0.0
                 )
@@ -95,8 +107,7 @@ class HomeViewModel(
     }
 
     private fun fetchWeather() = viewModelScope.launch {
-        homeUseCase
-            .getCurrentWeather(
+        getCurrentWeatherUseCase(
                 _uiState.value.lat,
                 _uiState.value.lon,
                 _uiState.value.temperatureUnit,

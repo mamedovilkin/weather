@@ -5,7 +5,9 @@ package io.github.mamedovilkin.weather.ui.screen.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.mamedovilkin.weather.domain.model.Location
-import io.github.mamedovilkin.weather.domain.usecase.SearchUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetLocationUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SearchLocationUseCase
+import io.github.mamedovilkin.weather.domain.usecase.SetLocationUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,14 +34,16 @@ data class SearchUiState(
 )
 
 class SearchViewModel(
-    private val searchUseCase: SearchUseCase
+    private val getLocationUseCase: GetLocationUseCase,
+    private val setLocationUseCase: SetLocationUseCase,
+    private val searchLocationUseCase: SearchLocationUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
     fun fetchLocation() = viewModelScope.launch {
-        searchUseCase.location
+        getLocationUseCase.location
             .catch { e ->
                 setFailureSearchScreenState(Exception(e))
             }
@@ -54,7 +58,7 @@ class SearchViewModel(
     }
 
     fun setLocation(lat: Double, lon: Double) = viewModelScope.launch {
-        searchUseCase.setLocation(lat, lon)
+        setLocationUseCase(lat, lon)
     }
 
     fun setSearchQuery(searchQuery: String) {
@@ -82,8 +86,7 @@ class SearchViewModel(
             )
         }
 
-        searchUseCase
-            .searchLocation(searchQuery)
+        searchLocationUseCase(searchQuery)
             .onSuccess { locations ->
                 _uiState.update { currentState ->
                     if (locations.isNotEmpty()) {
