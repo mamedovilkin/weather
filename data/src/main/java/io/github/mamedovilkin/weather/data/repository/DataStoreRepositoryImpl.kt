@@ -3,6 +3,7 @@ package io.github.mamedovilkin.weather.data.repository
 import androidx.datastore.core.DataStore
 import kotlinx.coroutines.flow.Flow
 import androidx.datastore.preferences.core.*
+import io.github.mamedovilkin.weather.domain.model.LocationData
 import io.github.mamedovilkin.weather.domain.model.PressureUnit
 import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
 import io.github.mamedovilkin.weather.domain.model.WindSpeedUnit
@@ -15,6 +16,7 @@ class DataStoreRepositoryImpl (
 ) : DataStoreRepository {
 
     private companion object {
+        val NAME = stringPreferencesKey("name")
         val LAT = doublePreferencesKey("lat")
         val LON = doublePreferencesKey("lon")
         val TEMPERATURE_UNIT = stringPreferencesKey("temperature_unit")
@@ -22,19 +24,21 @@ class DataStoreRepositoryImpl (
         val PRESSURE_UNIT = stringPreferencesKey("pressure_unit")
     }
 
-    override suspend fun setLocation(lat: Double, lon: Double) {
+    override suspend fun setLocation(name: String, lat: Double, lon: Double) {
         dataStore.edit { preferences ->
+            preferences[NAME] = name
             preferences[LAT] = lat
             preferences[LON] = lon
         }
     }
 
-    override val location: Flow<List<Double>> = dataStore.data
+    override val location: Flow<LocationData> = dataStore.data
             .catch {
                 emit(emptyPreferences())
             }
             .map { preferences ->
-                listOf(
+                LocationData(
+                    preferences[NAME] ?: "",
                     preferences[LAT] ?: 0.0,
                     preferences[LON] ?: 0.0,
                 )

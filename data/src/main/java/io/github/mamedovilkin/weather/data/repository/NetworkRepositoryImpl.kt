@@ -10,6 +10,7 @@ import io.github.mamedovilkin.weather.data.mapper.toDomainWeather
 import io.github.mamedovilkin.weather.data.mapper.toEntityWeather
 import io.github.mamedovilkin.weather.data.model.SearchDto
 import io.github.mamedovilkin.weather.data.model.WeatherDto
+import io.github.mamedovilkin.weather.data.util.isInternetAvailable
 import io.github.mamedovilkin.weather.domain.model.Location
 import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
 import io.github.mamedovilkin.weather.domain.model.Weather
@@ -24,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.coroutines.resume
 
 class NetworkRepositoryImpl(
@@ -33,45 +35,41 @@ class NetworkRepositoryImpl(
     private val weatherDao: WeatherDao
 ) : NetworkRepository {
 
-    val lang = if (Locale.getDefault().language == "ru") "ru" else "en"
-
     override suspend fun getWeather(
         lat: Double,
         lon: Double,
         temperatureUnit: TemperatureUnit,
         windSpeedUnit: WindSpeedUnit
     ): Result<Weather> {
-        return safeRequest {
+        return try {
+            var name = getCityName(lat, lon)
+
+            if (name != null) {
+                name = geocodingHttpClient
+                    .get("v1/search?name=$name&count=1&language=${Locale.getDefault().language}&format=json")
+                    .body<SearchDto>()
+                    .results
+                    .first()
+                    .toDomainLocation()
+                    .name
+            }
+
+            val weatherEntity = weatherHttpClient
+                .get("v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,surface_pressure&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset,uv_index_max&forecast_days=16&temperature_unit=${temperatureUnit.name.lowercase()}&wind_speed_unit=${windSpeedUnit.name.lowercase()}&timezone=${TimeZone.getDefault().id}")
+                .body<WeatherDto>()
+                .toEntityWeather(name)
+
+            weatherDao.insertWeather(weatherEntity)
+
+            val weather = weatherDao.getWeather()
+
+            Result.Success(weather.toDomainWeather(), !isInternetAvailable())
+        } catch (e: Exception) {
             try {
-                var name = getCityName(lat, lon)
-
-                if (name != null) {
-                    name = geocodingHttpClient
-                        .get("v1/search?name=$name&count=1&language=$lang&format=json")
-                        .body<SearchDto>()
-                        .results
-                        .first()
-                        .toDomainLocation()
-                        .name
-                }
-
-                val weatherEntity = weatherHttpClient
-                    .get("v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,surface_pressure&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=16&temperature_unit=${temperatureUnit.name.lowercase()}&wind_speed_unit=${windSpeedUnit.name.lowercase()}")
-                    .body<WeatherDto>()
-                    .toEntityWeather(name)
-
-                weatherDao.insertWeather(weatherEntity)
-
                 val weather = weatherDao.getWeather()
-
-                return Result.Success(weather.toDomainWeather())
-            } catch (e: Exception) {
-                try {
-                    val weather = weatherDao.getWeather()
-                    return Result.Success(weather.toDomainWeather())
-                } catch (_: Exception) {
-                    return Result.Failure(e)
-                }
+                Result.Success(weather.toDomainWeather(), !isInternetAvailable())
+            } catch (_: Exception) {
+                Result.Failure(e)
             }
         }
     }
@@ -138,12 +136,12 @@ class NetworkRepositoryImpl(
     override suspend fun searchLocation(query: String): Result<List<Location>> {
         val formattedQuery = query.replace(" ", "%20")
 
-        return safeRequest {
+        return safeRequest ({
             geocodingHttpClient
-                .get("v1/search?name=$formattedQuery&count=10&language=$lang&format=json")
+                .get("v1/search?name=$formattedQuery&count=10&language=${Locale.getDefault().language}&format=json")
                 .body<SearchDto>()
                 .results
                 .map { it.toDomainLocation() }
-        }
+        }, false)
     }
 }

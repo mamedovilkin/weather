@@ -3,6 +3,7 @@ package io.github.mamedovilkin.weather.ui.screen.settings
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -396,7 +397,7 @@ fun AppVersionItem(
             modifier = Modifier.weight(1F)
         )
         Text(
-            text = packageInfo.versionName.toString(),
+            text = "${packageInfo.versionName} (${if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) packageInfo.longVersionCode else @Suppress("DEPRECATION") packageInfo.versionCode.toLong()})",
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             color = primary

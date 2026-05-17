@@ -64,7 +64,8 @@ fun SearchScreen(
         SearchBar(
             searchQuery = uiState.searchQuery,
             setSearchQuery = { searchViewModel.setSearchQuery(it) },
-            onSearch = { searchViewModel.fetchLocations(it) }
+            onSearch = { searchViewModel.fetchLocations(it) },
+            onClose = { searchViewModel.reset() }
         )
         when (val screenState = uiState.searchScreenState) {
             SearchScreenState.Init -> {
@@ -103,8 +104,8 @@ fun SearchScreen(
                     locations = screenState.locations,
                     selectedLat = uiState.lat,
                     selectedLon = uiState.lon,
-                    onSetLocation = { lat, lon ->
-                        searchViewModel.setLocation(lat, lon)
+                    onSetLocation = { name, lat, lon ->
+                        searchViewModel.setLocation(name, lat, lon)
                     }
                 )
             }
@@ -117,7 +118,7 @@ fun LocationsList(
     locations: List<Location>,
     selectedLat: Double,
     selectedLon: Double,
-    onSetLocation: (lat: Double, lon: Double) -> Unit,
+    onSetLocation: (name: String, lat: Double, lon: Double) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -130,11 +131,16 @@ fun LocationsList(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_marker),
+                    contentDescription = null,
+                    tint = primary,
+                    modifier = Modifier.size(36.dp)
+                )
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
                         .weight(1F)
-                        .padding(end = 8.dp)
+                        .padding(horizontal = 8.dp)
                 ) {
                     Text(
                         text = location.name,
@@ -152,7 +158,7 @@ fun LocationsList(
                     }
                 }
                 Button(
-                    onClick = { onSetLocation(location.latitude, location.longitude) },
+                    onClick = { onSetLocation(location.name, location.latitude, location.longitude) },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (
                             location.latitude == selectedLat && location.longitude == selectedLon

@@ -1,5 +1,6 @@
 package io.github.mamedovilkin.weather.ui.components
 
+import android.content.Context
 import android.graphics.Outline
 import android.graphics.drawable.GradientDrawable
 import android.view.View
@@ -122,6 +123,7 @@ fun SearchBar(
     searchQuery: String,
     setSearchQuery: (String) -> Unit,
     onSearch: (String) -> Unit,
+    onClose: () -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -145,6 +147,16 @@ fun SearchBar(
                 tint = background
             )
         },
+        trailingIcon = {
+            if (searchQuery.isNotEmpty()) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_close),
+                    contentDescription = null,
+                    tint = background,
+                    modifier = Modifier.clickable { onClose() }
+                )
+            }
+        },
         placeholder = {
             Text(
                 text = stringResource(R.string.search),
@@ -167,7 +179,7 @@ fun SearchBar(
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent
         ),
-        shape = RoundedCornerShape(4.dp),
+        shape = RoundedCornerShape(36.dp),
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
@@ -177,14 +189,14 @@ fun SearchBar(
 
 @Composable
 fun AdBanner(
-    slotId: Int,
+    context: Context,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var ad by remember { mutableStateOf<NativeAd?>(null) }
 
     LaunchedEffect(Unit) {
-        val nativeAd = NativeAd(slotId, context)
+        val nativeAd = NativeAd(1917863, context)
 
         nativeAd.listener = object : NativeAd.NativeAdListener {
             override fun onLoad(promo: NativePromoBanner, loadedAd: NativeAd) {
@@ -244,7 +256,7 @@ fun AdBanner(
                         ctaButtonView.clipToOutline = true
                         ctaButtonView.outlineProvider = object : ViewOutlineProvider() {
                             override fun getOutline(view: View, outline: Outline) {
-                                outline.setRoundRect(0, 0, view.width, view.height, ((28.dp).value * context.resources.displayMetrics.density))
+                                outline.setRoundRect(0, 0, view.width, view.height, (16 * context.resources.displayMetrics.density))
                             }
                         }
                     }

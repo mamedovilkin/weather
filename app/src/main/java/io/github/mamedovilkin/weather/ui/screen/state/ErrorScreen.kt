@@ -34,7 +34,7 @@ fun ErrorScreen(
 ) {
     val message = when (e.cause) {
         is SocketTimeoutException -> stringResource(R.string.server_timeout)
-        is UnknownHostException -> stringResource(R.string.no_internet_connection)
+        is UnknownHostException -> stringResource(R.string.no_internet_connection_please_try_again_later)
         else -> stringResource(R.string.cannot_connect_to_server)
     }
 

@@ -29,6 +29,9 @@ fun WeatherDto.toEntityWeather(name: String?) =
             maxTemperatures = daily.temperature_2m_max,
             minTemperatures = daily.temperature_2m_min,
             weatherCodes = daily.weather_code,
+            sunrises = daily.sunrise,
+            sunsets = daily.sunset,
+            uvIndexes = daily.uv_index_max,
         )
     )
 
@@ -53,5 +56,8 @@ fun WeatherEntity.toDomainWeather() =
             maxTemperatures = daily.maxTemperatures,
             minTemperatures = daily.minTemperatures,
             weatherCodes = daily.weatherCodes,
+            sunrises = daily.sunrises,
+            sunsets = daily.sunsets,
+            uvIndexes = daily.uvIndexes
         )
     )

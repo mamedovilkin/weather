@@ -72,8 +72,8 @@ class WeatherWidget : GlanceAppWidget(), KoinComponent {
 
             LaunchedEffect(location) {
                 if (temperatureUnit != null && windSpeedUnit != null && location != null) {
-                    getCurrentWeatherUseCase(location!!.first(), location!!.last(), temperatureUnit!!.convertToTemperatureUnit(), windSpeedUnit!!.convertToWindSpeedUnit())
-                        .onSuccess { weather ->
+                    getCurrentWeatherUseCase(location!!.lat, location!!.lon, temperatureUnit!!.convertToTemperatureUnit(), windSpeedUnit!!.convertToWindSpeedUnit())
+                        .onSuccess { weather, _ ->
                             weatherCode = weather.weatherCode
                             temperature = weather.temperature
                             feelsLike = weather.feelsLike

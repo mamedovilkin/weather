@@ -24,9 +24,9 @@
     <string name="mph">%.1f м/ч</string>
     <string name="mb">%.2f мб</string>
     <string name="mmhg">%.2f мм рт. ст.</string>
-    <string name="server_timeout">Время ожидания сервера истекло. Пожалуйста попробуйте позже.</string>
-    <string name="no_internet_connection">Нет подключения к интернету. Пожалуйста попробуйте позже.</string>
-    <string name="cannot_connect_to_server">Невозможно подключиться к серверу. Пожалуйста попробуйте позже.</string>
+    <string name="server_timeout">Время ожидания сервера истекло. Пожалуйста, попробуйте позже. Если вы используете VPN, пожалуйста, отключите его, так как он мешает работе приложения.</string>
+    <string name="no_internet_connection_please_try_again_later">Нет подключения к интернету. Пожалуйста, попробуйте позже. Если вы используете VPN, пожалуйста, отключите его, так как он мешает работе приложения.</string>
+    <string name="cannot_connect_to_server">Невозможно подключиться к серверу. Пожалуйста, попробуйте позже. Если вы используете VPN, пожалуйста, отключите его, так как он мешает работе приложения.</string>
     <string name="pressure_unit">Единица измерения\nдавления</string>
     <string name="wind_speed_unit">Единица измерения\nскорости ветра</string>
     <string name="kmh_unit">км/ч</string>
@@ -37,7 +37,7 @@
     <string name="language">Язык</string>
     <string name="feedback">Обратная связь</string>
     <string name="app_version">Версия приложения</string>
-    <string name="restart_the_app_to_apply_changes">Перезапустите приложение чтобы применить изменения.</string>
+    <string name="restart_the_app_to_apply_changes">Перезапустите приложение, чтобы применить изменения.</string>
     <string name="widget_summary">%1$s\nощущается как %2$s°%3$s</string>
     <string name="loading">Загрузка…</string>
     <string name="weather_widget_description">Смотрите текущую погоду в вашем городе</string>
@@ -66,4 +66,14 @@
     <string name="thunderstorm_wit_hail">Гроза с градом</string>
     <string name="unknown">Неизвестно</string>
     <string name="please_install_an_email_app">Пожалуйста, установите почтовое приложение.</string>
+    <string name="location_permission_message">Разрешение на определение местоположения не было получено.</string>
+    <string name="sunrise">Восход</string>
+    <string name="sunset">Закат</string>
+    <string name="low">Низкий</string>
+    <string name="medium">Средний</string>
+    <string name="high">Высокий</string>
+    <string name="very_high">Очень высокий</string>
+    <string name="extremely_high">Чрезвычайно высокий</string>
+    <string name="no_internet_connection">Нет подключения к интернету</string>
+    <string name="warning_message">Приложение работает офлайн, данные могут быть не актульны. Пожалуйста, проверьте свое интернет соединение. Если вы используете VPN, пожалуйста, отключите его, так как он мешает работе приложения.</string>
 </resources>

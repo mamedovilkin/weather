@@ -19,8 +19,8 @@ android {
         applicationId = "io.github.mamedovilkin.weather"
         minSdk = 24
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "1.5"
 
         val localPropertiesFile = rootProject.file("local.properties")
         val localProperties = Properties()
@@ -38,6 +38,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlin {
@@ -75,5 +76,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     ksp(libs.room.compiler)
 }

@@ -1,10 +1,11 @@
 package io.github.mamedovilkin.weather.domain.repository
 
+import io.github.mamedovilkin.weather.domain.model.LocationData
 import kotlinx.coroutines.flow.Flow
 
 interface DataStoreRepository {
-    suspend fun setLocation(lat: Double, lon: Double)
-    val location: Flow<List<Double>>
+    suspend fun setLocation(name: String, lat: Double, lon: Double)
+    val location: Flow<LocationData>
     suspend fun setTemperatureUnit(temperatureUnit: String)
     val temperatureUnit: Flow<String>
     suspend fun setWindSpeedUnit(windSpeedUnit: String)

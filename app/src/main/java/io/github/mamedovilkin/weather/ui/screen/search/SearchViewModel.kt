@@ -29,6 +29,7 @@ sealed interface SearchScreenState {
 data class SearchUiState(
     val searchScreenState: SearchScreenState = SearchScreenState.Init,
     val searchQuery: String = "",
+    val name: String = "",
     val lat: Double = 0.0,
     val lon: Double = 0.0,
 )
@@ -50,15 +51,16 @@ class SearchViewModel(
             .collect {
                 _uiState.update { currentState ->
                     currentState.copy(
-                        lat = it.first(),
-                        lon = it.last()
+                        name = it.name,
+                        lat = it.lat,
+                        lon = it.lon
                     )
                 }
             }
     }
 
-    fun setLocation(lat: Double, lon: Double) = viewModelScope.launch {
-        setLocationUseCase(lat, lon)
+    fun setLocation(name: String, lat: Double, lon: Double) = viewModelScope.launch {
+        setLocationUseCase(name, lat, lon)
     }
 
     fun setSearchQuery(searchQuery: String) {
@@ -87,7 +89,7 @@ class SearchViewModel(
         }
 
         searchLocationUseCase(searchQuery)
-            .onSuccess { locations ->
+            .onSuccess { locations, _ ->
                 _uiState.update { currentState ->
                     if (locations.isNotEmpty()) {
                         currentState.copy(
@@ -102,9 +104,17 @@ class SearchViewModel(
                     }
                 }
             }
-            .onFailure { e ->
-                setFailureSearchScreenState(e)
+            .onFailure {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        searchScreenState = SearchScreenState.NoResults
+                    )
+                }
             }
+    }
+
+    fun reset() {
+        _uiState.value = SearchUiState()
     }
 
     private fun setFailureSearchScreenState(e: Exception) {

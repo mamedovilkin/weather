@@ -23,9 +23,9 @@
     <string name="mph">%.1f mph</string>
     <string name="mb">%.2f mb</string>
     <string name="mmhg">%.2f mm Hg</string>
-    <string name="server_timeout">Server timeout. Please try again later.</string>
-    <string name="no_internet_connection">No internet connection. Please try again later.</string>
-    <string name="cannot_connect_to_server">Cannot connect to server. Please try again later.</string>
+    <string name="server_timeout">Server timeout. Please try again later. If you are using a VPN, please disable it, it interferes with the app\'s operation.</string>
+    <string name="no_internet_connection_please_try_again_later">No internet connection. Please try again later. If you are using a VPN, please disable it, it interferes with the app\'s operation.</string>
+    <string name="cannot_connect_to_server">Cannot connect to server. Please try again later. If you are using a VPN, please disable it, it interferes with the app\'s operation.</string>
     <string name="pressure_unit">Pressure unit</string>
     <string name="wind_speed_unit">Wind speed unit</string>
     <string name="kmh_unit">km/h</string>
@@ -65,4 +65,15 @@
     <string name="thunderstorm_wit_hail">Thunderstorm with hail</string>
     <string name="unknown">Unknown</string>
     <string name="please_install_an_email_app">Please install an email app.</string>
+    <string name="location_permission_message">Location permission did not granted.</string>
+    <string name="sunrise">Sunrise</string>
+    <string name="sunset">Sunset</string>
+    <string name="uv_index" translatable="false">UV Index</string>
+    <string name="low">Low</string>
+    <string name="medium">Medium</string>
+    <string name="high">High</string>
+    <string name="very_high">Very high</string>
+    <string name="extremely_high">Extremely high</string>
+    <string name="no_internet_connection">No internet connection</string>
+    <string name="warning_message">App works offline, data may not be up to date. Please, check your internet connection. If you are using a VPN, please disable it, it interferes with the app\'s operation.</string>
 </resources>
