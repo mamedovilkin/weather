@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -20,13 +20,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.mamedovilkin.weather.R
@@ -46,14 +46,13 @@ fun SearchScreen(
     searchViewModel: SearchViewModel = koinViewModel()
 ) {
     val uiState by searchViewModel.uiState.collectAsStateWithLifecycle()
+    val locations by searchViewModel.locations.collectAsStateWithLifecycle(emptyList())
 
     LaunchedEffect(Unit) {
         if (city != null && city != "{city}") {
             searchViewModel.setSearchQuery(city)
             searchViewModel.fetchLocations(city)
         }
-
-        searchViewModel.fetchLocation()
     }
 
     Column(
@@ -89,21 +88,13 @@ fun SearchScreen(
             is SearchScreenState.Failure -> {
                 ErrorScreen(
                     e = screenState.e,
-                    onRetry = { searchViewModel.fetchLocation() }
+                    onRetry = { searchViewModel.fetchLocations(uiState.searchQuery) }
                 )
             }
             is SearchScreenState.Success -> {
-                Text(
-                    text = stringResource(R.string.results_found, screenState.locations.size),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = primary,
-                    modifier = Modifier.padding(8.dp)
-                )
                 LocationsList(
-                    locations = screenState.locations,
-                    selectedLat = uiState.lat,
-                    selectedLon = uiState.lon,
+                    locations = locations.map { it.lat to it.lon }.toSet(),
+                    found = screenState.locations,
                     onSetLocation = { name, lat, lon ->
                         searchViewModel.setLocation(name, lat, lon)
                     }
@@ -115,9 +106,8 @@ fun SearchScreen(
 
 @Composable
 fun LocationsList(
-    locations: List<Location>,
-    selectedLat: Double,
-    selectedLon: Double,
+    locations: Set<Pair<Double, Double>>,
+    found: List<Location>,
     onSetLocation: (name: String, lat: Double, lon: Double) -> Unit,
 ) {
     LazyColumn(
@@ -125,14 +115,18 @@ fun LocationsList(
             .fillMaxSize()
             .padding(horizontal = 8.dp)
     ) {
-        items(locations) { location ->
+        itemsIndexed(found) { index, location ->
+            val isSaved = remember(location, locations) {
+                (location.latitude to location.longitude) in locations
+            }
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_marker),
+                    painter = painterResource(R.drawable.ic_location),
                     contentDescription = null,
                     tint = primary,
                     modifier = Modifier.size(36.dp)
@@ -158,14 +152,22 @@ fun LocationsList(
                     }
                 }
                 Button(
-                    onClick = { onSetLocation(location.name, location.latitude, location.longitude) },
+                    onClick = {
+                        onSetLocation(
+                            location.name,
+                            location.latitude,
+                            location.longitude
+                        )
+                    },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (
-                            location.latitude == selectedLat && location.longitude == selectedLon
-                        ) primary.copy(alpha = 0.1F) else primary
+                        containerColor =
+                            if (isSaved)
+                                primary.copy(alpha = 0.1F)
+                            else
+                                primary
                     )
                 ) {
-                    if (location.latitude == selectedLat && location.longitude == selectedLon) {
+                    if (isSaved) {
                         Icon(
                             painter = painterResource(R.drawable.ic_done),
                             contentDescription = null,
@@ -173,18 +175,16 @@ fun LocationsList(
                             modifier = Modifier.size(24.dp)
                         )
                     } else {
-                        Text(
-                            text = stringResource(R.string.set_location),
-                            textAlign = TextAlign.Center,
-                            fontSize = 12.sp,
-                            maxLines = 2,
-                            color = background
+                        Icon(
+                            painter = painterResource(R.drawable.ic_add),
+                            contentDescription = null,
+                            tint = background,
+                            modifier = Modifier.size(24.dp)
                         )
-
                     }
                 }
             }
-            if (locations.indexOf(location) != locations.size - 1) {
+            if (index != found.size - 1) {
                 HorizontalDivider(
                     thickness = 1.dp,
                     color = onPrimary,

@@ -1,6 +1,5 @@
 package io.github.mamedovilkin.weather.ui.components
 
-import android.content.Context
 import android.graphics.Outline
 import android.graphics.drawable.GradientDrawable
 import android.view.View
@@ -60,6 +59,7 @@ sealed class Screen(val route: String) {
     object Home: Screen("home_screen")
     object Search: Screen("search_screen/{city}")
     object Settings: Screen("settings_screen")
+    object Locations: Screen("locations_screen")
 }
 
 @Composable
@@ -84,7 +84,7 @@ fun WeatherBottomBar(
             Icon(
                 painter = painterResource(R.drawable.ic_sun),
                 contentDescription = null,
-                tint = if (currentRoute == Screen.Home.route) primary else onPrimary,
+                tint = if (currentRoute == Screen.Home.route || currentRoute == Screen.Locations.route) primary else onPrimary,
                 modifier = Modifier
                     .padding(24.dp)
                     .size(24.dp)
@@ -189,7 +189,6 @@ fun SearchBar(
 
 @Composable
 fun AdBanner(
-    context: Context,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

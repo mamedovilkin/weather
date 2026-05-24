@@ -28,6 +28,7 @@ import io.github.mamedovilkin.weather.ui.theme.WeatherTheme
 import io.github.mamedovilkin.weather.ui.theme.background
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import io.github.mamedovilkin.weather.ui.screen.locations.LocationsScreen
 import kotlinx.serialization.InternalSerializationApi
 
 class WeatherAppActivity : ComponentActivity() {
@@ -58,9 +59,14 @@ fun WeatherApp() {
                 graph = navController
                     .createGraph(startDestination = Screen.Home.route) {
                         composable(route = Screen.Home.route) {
-                            HomeScreen { city ->
-                                navController.navigate("search_screen/$city")
-                            }
+                            HomeScreen(
+                                onNavigateToSearch = { city ->
+                                    navController.navigate("search_screen/$city")
+                                },
+                                onNavigateToLocations = {
+                                    navController.navigate(Screen.Locations.route)
+                                }
+                            )
                         }
                         composable(
                             route = Screen.Search.route,
@@ -73,6 +79,13 @@ fun WeatherApp() {
                         }
                         composable(route = Screen.Settings.route) {
                             SettingsScreen()
+                        }
+                        composable(route = Screen.Locations.route) {
+                            LocationsScreen(
+                                onBack = {
+                                    navController.navigate(Screen.Home.route)
+                                }
+                            )
                         }
                     },
                 modifier = Modifier.navigationBarsPadding()

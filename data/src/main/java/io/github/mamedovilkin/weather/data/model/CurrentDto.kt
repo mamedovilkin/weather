@@ -12,4 +12,5 @@ data class CurrentDto(
     val wind_speed_10m: Double,
     val relative_humidity_2m: Int,
     val surface_pressure: Double,
+    val is_day: Int,
 )

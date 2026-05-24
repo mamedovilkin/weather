@@ -10,6 +10,7 @@ data class Weather(
     val wind: Double,
     val humidity: Int,
     val pressure: Double,
+    val isDay: Int,
     val hourly: Hourly,
     val daily: Daily
 ) {

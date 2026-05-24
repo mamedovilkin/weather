@@ -11,14 +11,13 @@
     <string name="search">Поиск</string>
     <string name="no_results">Нет результатов для %1$s</string>
     <string name="search_summary">Поиск по названию города или району</string>
-    <string name="set_location">Установить местоположение</string>
+    <string name="set">Установить</string>
     <string name="settings">Настройки</string>
     <string name="temperature_unit">Единица измерения\nтемпературы</string>
     <string name="celsius">Цельсий (°C)</string>
     <string name="fahrenheit">Фаренгейт (°F)</string>
     <string name="temperature">%1$s°%2$s</string>
     <string name="feels_like">%1$s,\nощущается как %2$s°%3$s</string>
-    <string name="results_found">Результатов найдено: %1$s</string>
     <string name="kmh">%.1f км/ч</string>
     <string name="ms">%.1f м/с</string>
     <string name="mph">%.1f м/ч</string>
@@ -76,4 +75,10 @@
     <string name="extremely_high">Чрезвычайно высокий</string>
     <string name="no_internet_connection">Нет подключения к интернету</string>
     <string name="warning_message">Приложение работает офлайн, данные могут быть не актульны. Пожалуйста, проверьте свое интернет соединение. Если вы используете VPN, пожалуйста, отключите его, так как он мешает работе приложения.</string>
+    <string name="forecast_widget_description">Смотрите прогноз погоды на 5 дней в вашем городе</string>
+    <string name="locations">Локации</string>
+    <string name="current_weather">Текущая погода</string>
+    <string name="forecast_weather">Прогноз погоды</string>
+    <string name="default_">По умолчанию</string>
+    <string name="other_locations">Другие локации</string>
 </resources>

@@ -4,4 +4,5 @@ data class Hourly(
     val times: List<String>,
     val temperatures: List<Double>,
     val weatherCodes: List<Int>,
+    val isDays: List<Int>
 )

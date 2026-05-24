@@ -9,5 +9,5 @@ import io.github.mamedovilkin.weather.domain.util.Result
 class GetCurrentWeatherUseCase(
     private val networkRepository: NetworkRepository
 ) {
-    suspend operator fun invoke(lat: Double, lon: Double, temperatureUnit: TemperatureUnit, windSpeedUnit: WindSpeedUnit): Result<Weather> = networkRepository.getWeather(lat, lon, temperatureUnit, windSpeedUnit)
+    suspend operator fun invoke(lat: Double, lon: Double, temperatureUnit: TemperatureUnit, windSpeedUnit: WindSpeedUnit, forecastDays: Int = 16): Result<Weather> = networkRepository.getWeather(lat, lon, temperatureUnit, windSpeedUnit, forecastDays)
 }

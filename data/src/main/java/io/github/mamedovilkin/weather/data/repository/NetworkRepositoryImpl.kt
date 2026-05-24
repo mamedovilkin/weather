@@ -4,7 +4,7 @@ import android.location.Address
 import android.location.Geocoder
 import android.os.Build
 import androidx.annotation.RequiresApi
-import io.github.mamedovilkin.weather.data.dao.WeatherDao
+import io.github.mamedovilkin.weather.domain.dao.WeatherDao
 import io.github.mamedovilkin.weather.data.mapper.toDomainLocation
 import io.github.mamedovilkin.weather.data.mapper.toDomainWeather
 import io.github.mamedovilkin.weather.data.mapper.toEntityWeather
@@ -15,6 +15,7 @@ import io.github.mamedovilkin.weather.domain.model.Location
 import io.github.mamedovilkin.weather.domain.model.TemperatureUnit
 import io.github.mamedovilkin.weather.domain.model.Weather
 import io.github.mamedovilkin.weather.domain.model.WindSpeedUnit
+import io.github.mamedovilkin.weather.domain.repository.DataStoreRepository
 import io.github.mamedovilkin.weather.domain.repository.NetworkRepository
 import io.github.mamedovilkin.weather.domain.util.Result
 import io.github.mamedovilkin.weather.domain.util.safeRequest
@@ -32,14 +33,16 @@ class NetworkRepositoryImpl(
     private val geocoder: Geocoder,
     private val weatherHttpClient: HttpClient,
     private val geocodingHttpClient: HttpClient,
-    private val weatherDao: WeatherDao
+    private val weatherDao: WeatherDao,
+    private val dataStoreRepository: DataStoreRepository
 ) : NetworkRepository {
 
     override suspend fun getWeather(
         lat: Double,
         lon: Double,
         temperatureUnit: TemperatureUnit,
-        windSpeedUnit: WindSpeedUnit
+        windSpeedUnit: WindSpeedUnit,
+        forecastDays: Int
     ): Result<Weather> {
         return try {
             var name = getCityName(lat, lon)
@@ -55,11 +58,13 @@ class NetworkRepositoryImpl(
             }
 
             val weatherEntity = weatherHttpClient
-                .get("v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,surface_pressure&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset,uv_index_max&forecast_days=16&temperature_unit=${temperatureUnit.name.lowercase()}&wind_speed_unit=${windSpeedUnit.name.lowercase()}&timezone=${TimeZone.getDefault().id}")
+                .get("v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,surface_pressure,is_day&hourly=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset,uv_index_max&forecast_days=$forecastDays&temperature_unit=${temperatureUnit.name.lowercase()}&wind_speed_unit=${windSpeedUnit.name.lowercase()}&timezone=${TimeZone.getDefault().id}")
                 .body<WeatherDto>()
                 .toEntityWeather(name)
 
             weatherDao.insertWeather(weatherEntity)
+
+            dataStoreRepository.setLocation(weatherEntity.name ?: "", weatherEntity.latitude, weatherEntity.longitude)
 
             val weather = weatherDao.getWeather()
 

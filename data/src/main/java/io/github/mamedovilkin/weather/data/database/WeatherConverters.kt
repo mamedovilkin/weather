@@ -1,8 +1,8 @@
 package io.github.mamedovilkin.weather.data.database
 
 import androidx.room.TypeConverter
-import io.github.mamedovilkin.weather.data.entity.DailyEntity
-import io.github.mamedovilkin.weather.data.entity.HourlyEntity
+import io.github.mamedovilkin.weather.domain.entity.DailyEntity
+import io.github.mamedovilkin.weather.domain.entity.HourlyEntity
 import kotlinx.serialization.json.Json
 
 class WeatherConverters {

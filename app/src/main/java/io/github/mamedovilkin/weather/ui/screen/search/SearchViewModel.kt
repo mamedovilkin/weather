@@ -5,13 +5,14 @@ package io.github.mamedovilkin.weather.ui.screen.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.mamedovilkin.weather.domain.model.Location
-import io.github.mamedovilkin.weather.domain.usecase.GetLocationUseCase
+import io.github.mamedovilkin.weather.domain.usecase.GetLocationsUseCase
 import io.github.mamedovilkin.weather.domain.usecase.SearchLocationUseCase
 import io.github.mamedovilkin.weather.domain.usecase.SetLocationUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.InternalSerializationApi
@@ -29,13 +30,10 @@ sealed interface SearchScreenState {
 data class SearchUiState(
     val searchScreenState: SearchScreenState = SearchScreenState.Init,
     val searchQuery: String = "",
-    val name: String = "",
-    val lat: Double = 0.0,
-    val lon: Double = 0.0,
 )
 
 class SearchViewModel(
-    private val getLocationUseCase: GetLocationUseCase,
+    getLocationsUseCase: GetLocationsUseCase,
     private val setLocationUseCase: SetLocationUseCase,
     private val searchLocationUseCase: SearchLocationUseCase
 ) : ViewModel() {
@@ -43,21 +41,12 @@ class SearchViewModel(
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
-    fun fetchLocation() = viewModelScope.launch {
-        getLocationUseCase.location
-            .catch { e ->
-                setFailureSearchScreenState(Exception(e))
-            }
-            .collect {
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        name = it.name,
-                        lat = it.lat,
-                        lon = it.lon
-                    )
-                }
-            }
-    }
+    val locations = getLocationsUseCase
+            .locations
+            .shareIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed()
+            )
 
     fun setLocation(name: String, lat: Double, lon: Double) = viewModelScope.launch {
         setLocationUseCase(name, lat, lon)
@@ -115,13 +104,5 @@ class SearchViewModel(
 
     fun reset() {
         _uiState.value = SearchUiState()
-    }
-
-    private fun setFailureSearchScreenState(e: Exception) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                searchScreenState = SearchScreenState.Failure(e = Exception(e))
-            )
-        }
     }
 }

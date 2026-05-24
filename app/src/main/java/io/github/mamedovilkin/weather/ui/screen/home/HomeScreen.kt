@@ -97,7 +97,8 @@ import kotlin.collections.chunked
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = koinViewModel(),
-    onNavigateToSearch: (String) -> Unit
+    onNavigateToSearch: (String) -> Unit,
+    onNavigateToLocations: () -> Unit
 ) {
     val context = LocalContext.current
     val permissionMessage = stringResource(R.string.location_permission_message)
@@ -145,6 +146,10 @@ fun HomeScreen(
                 screenState.weather.hourly.weatherCodes.chunked(24)
             }
 
+            val isDays = remember(screenState.weather.hourly.isDays) {
+                screenState.weather.hourly.isDays.chunked(24)
+            }
+
             val scrollToIndex = remember(screenState.weather.hourly.times) {  screenState.weather.hourly.times.indexOfFirst { !LocalTime.now().isAfter(getLocalTime(it)) } }
 
             LaunchedEffect(scrollToIndex) {
@@ -172,9 +177,7 @@ fun HomeScreen(
                     AnimatedVisibility(screenState.isOffline) {
                         WarningItem()
                     }
-                    AdBanner(
-                        context = context
-                    )
+                    AdBanner()
                     WeatherStats(
                         weatherStats = listOf(
                             WeatherStat(
@@ -229,6 +232,7 @@ fun HomeScreen(
                         times = times,
                         temperatures = temperatures,
                         weatherCodes = weatherCodes,
+                        isDays = isDays,
                     )
                     DailyForecast(
                         context = context,
@@ -236,8 +240,27 @@ fun HomeScreen(
                         times = times,
                         temperatures = temperatures,
                         weatherCodes = weatherCodes,
+                        isDays = isDays,
                     )
                     Spacer(modifier = Modifier.height(72.dp))
+                }
+                FloatingActionButton(
+                    onClick = { onNavigateToLocations() },
+                    shape = CircleShape,
+                    containerColor = cardBackgroundGradientEnd,
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .padding(
+                            start = 8.dp,
+                            bottom = 80.dp
+                        )
+                        .align(Alignment.BottomStart)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_locations),
+                        contentDescription = null,
+                        tint = Color.White
+                    )
                 }
                 FloatingActionButton(
                     onClick = {
@@ -247,7 +270,10 @@ fun HomeScreen(
                     containerColor = cardBackgroundGradientEnd,
                     modifier = Modifier
                         .navigationBarsPadding()
-                        .padding(bottom = 80.dp, end = 8.dp)
+                        .padding(
+                            end = 8.dp,
+                            bottom = 80.dp
+                        )
                         .align(Alignment.BottomEnd)
                 ) {
                     Icon(
@@ -265,7 +291,7 @@ fun HomeScreen(
 fun CurrentWeather(
     @DrawableRes seasonImage: Int,
     weather: Weather,
-    name: String?,
+    name: String,
     temperatureUnit: TemperatureUnit,
     onNavigateToSearch: (String) -> Unit,
 ) {
@@ -316,7 +342,7 @@ fun CurrentWeather(
                     )
                     .padding(vertical = 2.dp)
                     .padding(horizontal = 8.dp)
-                    .clickable { onNavigateToSearch(weather.name ?: name ?: unknown) }
+                    .clickable { onNavigateToSearch(weather.name ?: name.ifEmpty { unknown }) }
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_location),
@@ -326,7 +352,7 @@ fun CurrentWeather(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = weather.name ?: name ?: unknown,
+                    text = weather.name ?: name.ifEmpty { unknown },
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Normal,
                     color = primary
@@ -346,7 +372,7 @@ fun CurrentWeather(
                 modifier = Modifier.fillMaxSize()
             ) {
                 AsyncImage(
-                    model = getWeatherIcon(weather.weatherCode),
+                    model = getWeatherIcon(weather.weatherCode, weather.isDay),
                     contentDescription = null,
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.size(88.dp),
@@ -473,7 +499,7 @@ fun WeatherStatItem(
                 text = weatherStat.stat,
                 color = primary,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -487,7 +513,8 @@ fun HourlyForecast(
     context: Context,
     times: List<List<String>>,
     temperatures: List<List<Double>>,
-    weatherCodes: List<List<Int>>
+    weatherCodes: List<List<Int>>,
+    isDays: List<List<Int>>,
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -519,9 +546,10 @@ fun HourlyForecast(
                         color = if (isAfter) onPrimary else primary
                     )
                     AsyncImage(
-                        model = getWeatherIcon(weatherCodes[0][i]),
+                        model = getWeatherIcon(weatherCodes[0][i], isDays[0][i]),
                         contentScale = ContentScale.Crop,
                         contentDescription = null,
+                        alpha = if (isAfter) 0.5F else 1.0F,
                         modifier = Modifier
                             .padding(4.dp)
                             .size(48.dp)
@@ -545,7 +573,8 @@ fun DailyForecast(
     weather: Weather,
     times: List<List<String>>,
     temperatures: List<List<Double>>,
-    weatherCodes: List<List<Int>>
+    weatherCodes: List<List<Int>>,
+    isDays: List<List<Int>>,
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -587,7 +616,7 @@ fun DailyForecast(
                         modifier = Modifier.weight(1F)
                     )
                     AsyncImage(
-                        model = getWeatherIcon(weather.daily.weatherCodes[index]),
+                        model = getWeatherIcon(weather.daily.weatherCodes[index], 1),
                         contentScale = ContentScale.Crop,
                         contentDescription = null,
                         modifier = Modifier
@@ -648,7 +677,7 @@ fun DailyForecast(
                                 color = primary
                             )
                             AsyncImage(
-                                model = getWeatherIcon(weatherCodes[index][i]),
+                                model = getWeatherIcon(weatherCodes[index][i], isDays[index][i]),
                                 contentScale = ContentScale.Crop,
                                 contentDescription = null,
                                 modifier = Modifier

@@ -30,3 +30,29 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         )
     }
 }
+
+val MIGRATION_2_3 = object : Migration(2, 3) {
+
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE weather ADD COLUMN isDay INTEGER NOT NULL DEFAULT 1")
+
+        db.execSQL(
+            """
+                CREATE TABLE IF NOT EXISTS locations (
+                    id INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    lat REAL NOT NULL,
+                    lon REAL NOT NULL,
+                    PRIMARY KEY(id)
+                )
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+                CREATE UNIQUE INDEX index_locations_lat_lon
+                ON locations(lat, lon)
+            """.trimIndent()
+        )
+    }
+}

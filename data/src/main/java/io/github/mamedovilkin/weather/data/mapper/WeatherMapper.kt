@@ -1,8 +1,8 @@
 package io.github.mamedovilkin.weather.data.mapper
 
-import io.github.mamedovilkin.weather.data.entity.DailyEntity
-import io.github.mamedovilkin.weather.data.entity.HourlyEntity
-import io.github.mamedovilkin.weather.data.entity.WeatherEntity
+import io.github.mamedovilkin.weather.domain.entity.DailyEntity
+import io.github.mamedovilkin.weather.domain.entity.HourlyEntity
+import io.github.mamedovilkin.weather.domain.entity.WeatherEntity
 import io.github.mamedovilkin.weather.data.model.WeatherDto
 import io.github.mamedovilkin.weather.domain.model.Daily
 import io.github.mamedovilkin.weather.domain.model.Hourly
@@ -19,10 +19,12 @@ fun WeatherDto.toEntityWeather(name: String?) =
         wind = current.wind_speed_10m,
         humidity = current.relative_humidity_2m,
         pressure = current.surface_pressure,
+        isDay = current.is_day,
         hourly = HourlyEntity(
             times = hourly.time,
             temperatures = hourly.temperature_2m,
             weatherCodes = hourly.weather_code,
+            isDays = hourly.is_day,
         ),
         daily = DailyEntity(
             times = daily.time,
@@ -46,10 +48,12 @@ fun WeatherEntity.toDomainWeather() =
         wind = wind,
         humidity = humidity,
         pressure = pressure,
+        isDay = isDay,
         hourly = Hourly(
             times = hourly.times,
             temperatures = hourly.temperatures,
             weatherCodes = hourly.weatherCodes,
+            isDays = hourly.isDays
         ),
         daily = Daily(
             times = daily.times,

@@ -10,14 +10,13 @@
     <string name="search">Search</string>
     <string name="no_results">No results for %1$s</string>
     <string name="search_summary">Search by city name or district</string>
-    <string name="set_location">Set location</string>
+    <string name="set">Set</string>
     <string name="settings">Settings</string>
     <string name="temperature_unit">Temperature unit</string>
     <string name="celsius">Celsius (°C)</string>
     <string name="fahrenheit">Fahrenheit (°F)</string>
     <string name="temperature">%1$s°%2$s</string>
     <string name="feels_like">%1$s,\nfeels like %2$s°%3$s</string>
-    <string name="results_found">Results found: %1$s</string>
     <string name="kmh">%.1f km/h</string>
     <string name="ms">%.1f m/s</string>
     <string name="mph">%.1f mph</string>
@@ -76,4 +75,10 @@
     <string name="extremely_high">Extremely high</string>
     <string name="no_internet_connection">No internet connection</string>
     <string name="warning_message">App works offline, data may not be up to date. Please, check your internet connection. If you are using a VPN, please disable it, it interferes with the app\'s operation.</string>
+    <string name="forecast_widget_description">See 5-day weather forecast in your city</string>
+    <string name="locations">Locations</string>
+    <string name="current_weather">Current weather</string>
+    <string name="forecast_weather">Forecast weather</string>
+    <string name="default_">Default</string>
+    <string name="other_locations">Other locations</string>
 </resources>

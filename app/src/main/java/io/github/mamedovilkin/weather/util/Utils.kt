@@ -60,13 +60,13 @@ fun getLocalTime(datetime: String): LocalTime {
     return dateTime.toLocalTime()
 }
 
-fun getWeatherIcon(weatherCode: Int) = when (weatherCode) {
-    0 -> R.drawable.sunny
-    1, 2 -> R.drawable.partly_cloudy
+fun getWeatherIcon(weatherCode: Int, isDay: Int) = when (weatherCode) {
+    0 -> if (isDay == 1) R.drawable.clear_sky_day else R.drawable.clear_sky_night
+    1, 2 -> if (isDay == 1) R.drawable.partly_cloudy_day else R.drawable.partly_cloudy_night
     3 -> R.drawable.cloudy
     45, 48 -> R.drawable.foggy
     51, 53, 55, 56, 57, 80, 81, 82 -> R.drawable.rainy
-    61, 63, 65, 66, 67 -> R.drawable.partly_rainy
+    61, 63, 65, 66, 67 -> if (isDay == 1) R.drawable.partly_rainy_day else R.drawable.partly_rainy_night
     71, 73, 75, 77, 85, 86 -> R.drawable.snow
     95, 96, 99 ->  R.drawable.thunder
     else -> R.drawable.ic_error

@@ -1,11 +1,13 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "io.github.mamedovilkin.weather.domain"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 24
@@ -31,4 +33,6 @@ android {
 
 dependencies {
     implementation(libs.bundles.koin)
+    implementation(libs.bundles.room)
+    ksp(libs.room.compiler)
 }

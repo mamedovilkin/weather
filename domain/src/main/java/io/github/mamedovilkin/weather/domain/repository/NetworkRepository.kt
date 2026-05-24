@@ -13,6 +13,7 @@ interface NetworkRepository {
         lon: Double,
         temperatureUnit: TemperatureUnit,
         windSpeedUnit: WindSpeedUnit,
+        forecastDays: Int = 16
     ): Result<Weather>
 
     suspend fun searchLocation(

@@ -79,7 +79,7 @@ class HomeViewModel(
                 temperatureUnit = values[0].toString().convertToTemperatureUnit(),
                 windSpeedUnit = values[1].toString().convertToWindSpeedUnit(),
                 pressureUnit = values[2].toString().convertToPressureUnit(),
-                name = (values[3] as LocationData).name ?: "",
+                name = (values[3] as LocationData).name,
                 lat = (values[3] as LocationData).lat,
                 lon = (values[3] as LocationData).lon
             )

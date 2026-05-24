@@ -18,6 +18,7 @@
 
         <receiver
             android:name=".receiver.WeatherWidgetReceiver"
+            android:label="@string/current_weather"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -26,6 +27,19 @@
             <meta-data
                     android:name="android.appwidget.provider"
                     android:resource="@xml/weather_widget_info" />
+        </receiver>
+
+        <receiver
+                android:name=".receiver.ForecastWidgetReceiver"
+                android:label="@string/forecast_weather"
+                android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                    android:name="android.appwidget.provider"
+                    android:resource="@xml/forecast_widget_info" />
         </receiver>
 
         <activity

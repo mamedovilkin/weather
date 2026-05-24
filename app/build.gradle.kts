@@ -13,14 +13,14 @@ plugins {
 
 android {
     namespace = "io.github.mamedovilkin.weather"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "io.github.mamedovilkin.weather"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 6
-        versionName = "1.5"
+        targetSdk = 37
+        versionCode = 7
+        versionName = "1.6"
 
         val localPropertiesFile = rootProject.file("local.properties")
         val localProperties = Properties()
